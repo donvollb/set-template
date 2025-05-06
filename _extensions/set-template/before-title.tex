@@ -1,0 +1,185 @@
+% Pakete
+\usepackage{fancyhdr}             % für Kopf- und Fußzeile
+\usepackage{graphicx}             % für das Einbinden von Graphiken
+\usepackage{eurosym}              % für Eurosymbole
+\usepackage{booktabs}             % für zusätzliche Stilelemente in Tabellen
+\usepackage{xcolor}               % für Farben
+\usepackage{tabu}                 % für Tabellen, die über mehrere Seiten gehen
+\usepackage{tabto}                % für Tabs
+\usepackage{makecell}             % für Layouts in Tabellen
+\usepackage{longtable}            % für Tabellen über mehrere Seiten
+\usepackage{array}                % ebenfalls Tabellenlayout/Matritzen
+\usepackage{multirow}             % für Tabellen mit mehrzeiligen Zellen
+\usepackage{wrapfig}              % für Bilder und Tabellen, die von text umschlossen werden
+\usepackage{float}                % für Abbildungen/Tabellen
+\usepackage{colortbl}             % für farbige Zeilen/Spalten in Tabellen
+\usepackage{pdflscape}            % für mögliche Rotation der Seiten
+\usepackage{threeparttable}       % für Titel/Anmerkungen von Tabellen
+\usepackage[normalem]{ulem}       % für Unterstriche
+\usepackage{fontspec}             % für Schriftarten
+\usepackage{hyperref}             % für Hyperlinks
+\usepackage{geometry}             % für Seitenränder
+\usepackage{tocloft}              % für Inhaltsverzeichnismodifikationen
+\usepackage{titlesec}             % für Überschriftenmodifikationen
+\usepackage{datatool}             % für Laden der Info.csv im Partial Template (before-body.tex)
+
+ % Ab hier beginnt das Setup für die Hyperlinks
+\hypersetup{
+colorlinks=true,                  % farbige Links?
+linkcolor=blue,                   % Farbe der Hyperlinks zu Abschnitten innerhalb des Dokuments
+filecolor=magenta,                % Farbe von Hyperlinks zu Dateien
+urlcolor=cyan}                    % Farbe von URLs
+
+
+
+  % Hier wird noch das Inhaltsverzeichnis ein wenig zurechtgestutzt
+\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}
+% Punkte zwischen Eintrag und Seite auch bei "Sections" (erste Überschriftsebene)
+\renewcommand\cftsecfont{\mdseries}
+% Einträge bei "Sections" werden nicht fett geschrieben
+\renewcommand\cftsecpagefont{\mdseries}
+% Seitenzahlen bei "Sections" werden nicht fett geschrieben
+\setlength{\cftsecindent}{1.5em}                      % Einträge im Inhaltsverzeichnis leicht eingerückt
+
+
+% Hier wird das Layout der Section-Überschriften verändert (zentriert)
+\titleformat{\section}
+{\normalfont\Large\bfseries\center}
+{\thesection}{1em}{}
+  
+  
+% Hier werden einige Farben für die Verwendung im LATEX-Code definiert
+
+% blau-grau (Schiefer)
+\definecolor{bluegray}{HTML}{507289}             
+\definecolor{bluegraytable}{HTML}{EFF2F4}       
+
+% grün-grau (Ozean)
+\definecolor{greengray}{HTML}{77b6ba}             
+\definecolor{greengraytable}{HTML}{F3F8F9}       
+
+% dunkelblau (Nacht)
+\definecolor{darkblue}{HTML}{042c58}             
+\definecolor{darkbluetable}{HTML}{E8ECF0} 
+
+% hellblau (Tag)
+\definecolor{lightblue}{HTML}{6ab2e7}             
+\definecolor{lightbluetable}{HTML}{F2F8FD} 
+
+% dunkelgrün (Petrol)
+\definecolor{darkgreen}{HTML}{006b6b}             
+\definecolor{darkgreentable}{HTML}{9AA8AE} 
+
+% hellgrün (Apfel)
+\definecolor{lightgreen}{HTML}{26d07c}             
+\definecolor{lightgreentable}{HTML}{EBFBF3} 
+
+% violett (Pflaume)
+\definecolor{violett}{HTML}{4c3575}             
+\definecolor{violetttable}{HTML}{EFEDF3} 
+
+% pink (Fuchsia)
+\definecolor{pink}{HTML}{d13896}             
+\definecolor{pinktable}{HTML}{FBEDF6} 
+
+% rot (Himbeere)
+\definecolor{red}{HTML}{e31b4c}             
+\definecolor{redtable}{HTML}{FCEAEF} 
+
+% orange (Mango)
+\definecolor{orange}{HTML}{ffa252}             
+\definecolor{orangetable}{HTML}{FFF7EF} 
+
+% Allgemeine Farbe
+\definecolor{darkgrey}{RGB}{200, 200, 200}        % Dunkelgrau für manche Beschriftungen
+\definecolor{steelblue}{RGB}{70,130,180}          % Schriftfarbe steelblue
+
+% Standardfarben, falls nicht anders definiert
+\colorlet{maincolor}{bluegray}
+\colorlet{tablecolor}{bluegraytable}       
+
+% Falls eine spezifische Farbe (der definierten) genannt wird, werden die Standardfarben überschrieben
+$if(color)$
+\colorlet{maincolor}{$color$}
+\colorlet{tablecolor}{$color$table}  
+$endif$
+
+
+
+
+% Pagestyle, Kopf- und Fusszeile ----------------------------------------
+
+% fancy als pagestyle
+\pagestyle{fancy}
+\fancyhf{}
+
+$if(lheadlogo)$
+$if(lheadheight)$
+\lhead{\includegraphics[height=$lheadheight$]{$lheadlogo$}}
+$else$
+\lhead{\includegraphics[height=0.7cm]{$lheadlogo$}}
+$endif$
+$endif$
+
+$if(rheadlogo)$
+$if(rheadheight)$
+\rhead{\includegraphics[height=$rheadheight$]{$rheadlogo$}}
+$else$
+\rhead{\includegraphics[height=1.1cm]{$rheadlogo$}}
+$endif$
+$endif$
+
+% Horizontale Trennstriche
+\renewcommand{\headrulewidth}{1pt}
+\renewcommand{\headrule}{\hbox to\headwidth{%
+    \color{maincolor}\leaders\hrule height \headrulewidth\hfill}}
+    
+\renewcommand{\footrulewidth}{1pt}
+\renewcommand{\footrule}{\hbox to\headwidth{%
+    \color{maincolor}\leaders\hrule height \footrulewidth\hfill}}
+    
+% Fußzeile
+\rfoot{\color{darkgray}{Seite \thepage}}
+
+$if(lfoot)$
+\lfoot{\color{darkgray}{$lfoot$}}
+$endif$
+
+
+% Pagestyle plain umdefinieren fuer Titelseite und Inhaltsverzeichnis (Seite 1 und 2) --------------------------
+\fancypagestyle{plain}{
+  \fancyhf{}
+  
+$if(lheadlogo)$
+$if(lheadheight)$
+\lhead{\includegraphics[height=$lheadheight$]{$lheadlogo$}}
+$else$
+\lhead{\includegraphics[height=0.7cm]{$lheadlogo$}}
+$endif$
+$endif$
+
+$if(rheadlogo)$
+$if(rheadheight)$
+\rhead{\includegraphics[height=$rheadheight$]{$rheadlogo$}}
+$else$
+\rhead{\includegraphics[height=1.1cm]{$rheadlogo$}}
+$endif$
+$endif$
+
+% Horizontale Trennstriche
+\renewcommand{\headrulewidth}{1pt}
+\renewcommand{\headrule}{\hbox to\headwidth{%
+    \color{maincolor}\leaders\hrule height \headrulewidth\hfill}}
+    
+\renewcommand{\footrulewidth}{1pt}
+\renewcommand{\footrule}{\hbox to\headwidth{%
+    \color{maincolor}\leaders\hrule height \footrulewidth\hfill}}
+    
+% Fußzeile
+\rfoot{\color{darkgray}{Seite \thepage}}
+
+$if(lfoot)$
+\lfoot{\color{darkgray}{$lfoot$}}
+$endif$
+
+}

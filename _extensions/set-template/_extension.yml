@@ -1,10 +1,27 @@
-title: Set-template
+title: set-template
 author: donvollb
 version: 1.0.0
 quarto-required: ">=1.6.0"
 contributes:
   formats:
-    pdf:
+    common:
+      papersize: a4
       toc: true
-      include-in-header: header.tex
+      toc-title: INHALTSVERZEICHNIS
+      toc-depth: 2
+      mainfont: Red Hat Text # muss auf dem Rechner installiert sein (bei Windows am besten für alle Benutzer)
+    pdf:
+      pdf-engine: lualatex
+      template-partials: 
+      - before-title.tex
+      - before-body.tex
+      lheadlogo: images/RPTU_line.png
+      rheadlogo: images/meze_blue.png
+      geometry:
+        - left = 2cm
+        - right = 2cm
+        - top = 3cm
+        - bottom = 2cm
+        - headheight = 2cm
+        - footskip = 1.5cm
 
