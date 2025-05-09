@@ -1,6 +1,7 @@
 ---
 format:
   set-template-pdf: default
+
 params:
   i: 4 # Hier modifizieren: i gibt die Zeile der info Datei an und steht für einen Bericht (1: EzW, 2: KSW, 3: NUW, 4: Psych)
   zeitraum: SoSe25 # Hier modifizieren: Aktuelles Zeitraumskuerzel (z.B. SoSe24, WiSe24/25) fuer die Fusszeile
@@ -31,7 +32,7 @@ pacman::p_load(tidyverse,
                devtools)
 
 # Eigenes Paket aus github laden
-devtools::install_github("donvollb/setanalysis")
+if (!require(setanalysis)) {devtools::install_github("donvollb/setanalysis")}
 library(setanalysis)
 
 
@@ -87,7 +88,6 @@ if(!exists("i")) i <- 1 # falls i nicht existiert, wird es auf 1 gesetzt
   font.family <- "Red+Hat+Text" # Auswahl der Schriftart, gleicher Name wie bei Google Fonts
   # bei Flextable in Funktionsdatei (Funktion lv.kable) muss der Name "Red Hat Text" lauten
    
-  
   
 ##### 2. Farbsetting #####
   
@@ -147,8 +147,6 @@ opar <- par() #Diese abspeichern
 
 # Daten einlesen
 
-#load(file="./Daten/Basisdaten.rda")
-
 # Beispieldatensatz aus {setanalysis}
 data_all <- setanalysis::BspDaten
 Info <- data_all$pInfo
@@ -157,13 +155,13 @@ data <- data_all$dataLVE # LVE-Test
 rm(data_all)
 
 
-data$Kennung<-as.integer(data$Kennung) # nur LVE
+# "echte Daten"
 
-
+# load(file="./Daten/Basisdaten.rda")
 # Info <- read_delim("Info.csv", delim = ";", escape_double = FALSE, trim_ws = TRUE)
 
-
-
+# Kennung in Integer umwandeln
+data$Kennung<-as.integer(data$Kennung) # nur LVE
 ```
 
 {{< pagebreak >}}
@@ -247,7 +245,7 @@ FB_txt      <- Info$FB.txt[i]
 
 **Zeitraum:** `r Info$Zeitraum[i]`
 
-**Fragebogen:** LVE-Basis
+**Fragebogen:** `r Info$Auswahl[i]`
 
 \
 

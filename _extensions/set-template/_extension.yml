@@ -9,7 +9,7 @@ contributes:
       toc: true
       toc-title: INHALTSVERZEICHNIS
       toc-depth: 1
-      mainfont: Red Hat Text # muss auf dem Rechner installiert sein (bei Windows am besten für alle Benutzer)
+      mainfont: "Red Hat Text" # muss auf dem Rechner installiert sein (bei Windows am besten für alle Benutzer, siehe Readme in github)
       execute:
         echo: false
         output: asis
@@ -17,7 +17,7 @@ contributes:
         message: false
         comment: ''
     pdf:
-      pdf-engine: lualatex
+      pdf-engine: xelatex
       template-partials: 
       - before-title.tex
       lheadlogo: images/RPTU_line.png
