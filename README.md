@@ -13,5 +13,6 @@ quarto use template donvollb/set-template
 
 ## Lizenz
 
-[MIT License](LICENSE)
-Logos der RPTU (Rheinland-Pfälzische Technische Universität Kaiserslautern-Landau) und des Methodenzentrum: Eigentum der [RPTU](https://rptu.de)
+**Code:** [MIT License](LICENSE)
+
+**Logos:** Eigentum der [RPTU (Rheinland-Pfälzische Technische Universität Kaiserslautern-Landau)](https://rptu.de)
