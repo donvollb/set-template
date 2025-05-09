@@ -8,13 +8,18 @@ contributes:
       papersize: a4
       toc: true
       toc-title: INHALTSVERZEICHNIS
-      toc-depth: 2
+      toc-depth: 1
       mainfont: Red Hat Text # muss auf dem Rechner installiert sein (bei Windows am besten für alle Benutzer)
+      execute:
+        echo: false
+        output: asis
+        warning: false
+        message: false
+        comment: ''
     pdf:
       pdf-engine: lualatex
       template-partials: 
       - before-title.tex
-      - before-body.tex
       lheadlogo: images/RPTU_line.png
       rheadlogo: images/meze_blue.png
       geometry:

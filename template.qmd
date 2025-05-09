@@ -1,32 +1,469 @@
 ---
-title: "**Beispielbericht**"
 format:
   set-template-pdf: default
-lfoot: "LVE-Bericht FB-Ebene | FB `r params$i + 4` | `r params$Zeitraum.k`"
+params:
+  i: 4 # Hier modifizieren: i gibt die Zeile der info Datei an und steht für einen Bericht (1: EzW, 2: KSW, 3: NUW, 4: Psych)
+  zeitraum: SoSe25 # Hier modifizieren: Aktuelles Zeitraumskuerzel (z.B. SoSe24, WiSe24/25) fuer die Fusszeile
+  report_title: Beispielbericht
+
 color: bluegray
   # alternativ kann man eigene Farben über \definecolor definieren und sie "maincolor" und "tablecolor" nennen.
   # mögliche Farben: bluegray, greengray, darkblue, lightblue, darkgreen, lightgreen, violett, pink, red, orange (RPTU-Standardfarben)
-params:
-  i: 4 # Hier modifizieren: i gibt die Zeile der info Datei an und steht für einen Bericht (1: EzW, 2: KSW, 3: NUW, 4: Psych)
-  Zeitraum.k: SoSe24 # Hier modifizieren: Aktuelles Zeitraumskuerzel (z.B. SoSe24, WiSe24/25) fuer die Fusszeile
-header-includes:
-  - \newcommand{\ParamI}{4} # Hier modifizieren: Zahl wie i oben (fuer Stichprobenbeschreibung I auf Titelseite in before-body.tex)
+
+title: "**{{< meta params.report_title >}}**"
+lfoot: "Beispielbericht {{< meta params.zeitraum >}}"
 ---
+
+```{r}
+#| label: setup
+#| include: FALSE
+
+
+# ÄÖU richtig angezeigt? (Reopen with Encoding: UTF-8)
+
+# FUNKTION DES CHUNKS:
+# Pakete laden, Globale Variablen setzen und Datensätze/Funktionsdatei einlesen
+
+#### A - PAKETE ####
+#Mit der Pacman-Funktion werden die nötigen Pakete geladen und fehlende installiert. Bei Bedarf wird sie erweitert
+suppressPackageStartupMessages(if(!require(pacman)){install.packages("pacman")})
+pacman::p_load(tidyverse,
+               devtools)
+
+# Eigenes Paket aus github laden
+devtools::install_github("donvollb/setanalysis")
+library(setanalysis)
+
+
+#### B - GLOBALE VARIABLEN ####
+
+##### 1. Variable #####
+
+
+# i Variable
+if(exists("params")) i <- params$i # i gibt die Zeile der info Datei an und steht für einen Bericht (Anpassung im YAML)
+
+###### Protokollvariable (nicht ändern, muss hier oben stehen!)
+# Falls i existiert, was nur bei der Automatisierungsscheleife der Fall ist, wird das Protokoll mitgeschrieben
+# inkl.protokoll <- ifelse(exists("i"), TRUE, FALSE)
+# TO-DO: So funktioniert das nicht mehr, nochmal anschauen
+
+
+###### Modifizierbare Werte ######
+
+if(!exists("i")) i <- 1 # falls i nicht existiert, wird es auf 1 gesetzt
+
+
+# Berichtart Variable -> # LVE, ABS, STUD, SHOWUP? 
+  bericht <- "LVE"
+      # Um welchen Bericht handelt es sich? # Diese Variable wird gewählt um bspw. das Farbchema zu setzten
+      # WICHTIG: Einhalten der Abkürzung!
+  
+
+# Schnelles Überschreiben der Spaltenbreiten (kann im Normalfall so bleiben)
+#  col.width3 <- c("305pt", "50pt", "30pt")
+  col.width3 <- c(108, 18, 11)
+#  col.width4 <- c("243pt", "50pt", "30pt", "50pt")
+  col.width4 <- c(86, 18, 11, 18)
+#  col.width.sm <- c("182pt", "30pt", "25pt", "25pt", "25pt", "25pt", "25pt")
+  col.width.sm <- c(64, 11, 9, 9, 9, 9, 9)
+  
+
+###### Nicht-modifizierbare Werte (nur mit Bedacht ändern) ######
+
+
+# anchor Variable für offene Variablen
+  anchor.nr <- 0
+       # Die anchor Vairable dient zu erstellen von Hyperlinks von offenen Fragen
+  
+# Environment für offene Fragen
+  list.open <- new.env()
+       # In die Environment werden offene Fragen gepackt
+  
+# Sub-Chunks Nummer
+  sub.nr <- 0 # Für die fortlaufenden Titel der Subchunks, NICHT ÄNDERN!
+
+# Schriftart
+  font.family <- "Red+Hat+Text" # Auswahl der Schriftart, gleicher Name wie bei Google Fonts
+  # bei Flextable in Funktionsdatei (Funktion lv.kable) muss der Name "Red Hat Text" lauten
+   
+  
+  
+##### 2. Farbsetting #####
+  
+#Farbe der Balken/Text, unbedingt einstellen! -> automatisiert
+
+
+if (bericht == "ABS"){color.bars <- "#4c3575"} # violett (Pflaume)
+if (bericht == "STUD"){color.bars <- "#77b6ba"} # grüngrau (Ozean)
+if (bericht == "SHOWUP"){color.bars <- "#6ab2e7"} # hellblau (Tag)
+if (bericht == "LVE"){color.bars <- "#507289"} # blaugrau (Schiefer)
+
+  
+
+##### 3. Einstellungen zu Grafiken #####
+show.plot.mc <- FALSE # Sollen die Plots der MC-Fragen angezeigt werden?
+show.plot.sc <- TRUE # Sollen die Plots der SC-Fragen angezeigt werden?
+show.plot.sk <- TRUE  # Sollen die Plots der SK-Fragen angezeigt werden?
+
+
+
+##### 4. Chunk Einstellungen ####
+
+# knitr::opts_chunk$set(
+# 	comment = "",
+# 	# dev = "cairo_pdf",
+# 	results = "asis",
+# 	echo = FALSE,
+# 	warning = FALSE,
+# 	message = FALSE
+# )
+
+# Mal noch drinlassen, falls wir Cairo doch brauchen. Der Rest ist jetzt im extension yaml.
+
+options(knitr.duplicate.label = "allow") # sonst Probleme mit flextable_to_rmd()?
+
+##### 5. Auswahl der Schriftart ####
+# Prüfe, ob die gewählt Schriftart bereits in der Datenbank von {showtextdb} enthalten ist
+# Installiere sie, falls nicht
+if (!(font.family %in% showtextdb::font_installed())) {showtextdb::font_install(
+  showtextdb::google_fonts(font.family))}
+showtext::showtext_auto()
+
+par(family = font.family) # Grafik Einstellungen auf Schriftart ändern
+opar <- par() #Diese abspeichern
+
+# Google Font für Flextable registrieren ("Red Hat Text")
+# muss ggf. auf dem Rechner nur einmal ausgeführt werden? Wuerde ich noch auskommentiert drin lassen
+#gdtools::register_gfont(family = "Red Hat Text", subset = c("latin", "latin-ext"))
+#gdtools::installed_gfonts() # "Red Hat Text" sollte installiert sein
+#gdtools::font_family_exists("Red Hat Text") # sollte "True" ausgeben
+
+
+
+
+#### C - DATENSÄTZE LADEN ####
+
+
+# Daten einlesen
+
+#load(file="./Daten/Basisdaten.rda")
+
+# Beispieldatensatz aus {setanalysis}
+data_all <- setanalysis::BspDaten
+Info <- data_all$pInfo
+data <- data_all$dataLVE # LVE-Test
+# data <- data_all$dataSHOWUP # KOHORT Test
+rm(data_all)
+
+
+data$Kennung<-as.integer(data$Kennung) # nur LVE
+
+
+# Info <- read_delim("Info.csv", delim = ";", escape_double = FALSE, trim_ws = TRUE)
+
+
+
+```
 
 {{< pagebreak >}}
 
-# Stichprobenbeschreibung I
+# Allgemeine Angaben und Hinweise
 
-Fachbereich: Test
+## Legende zu Tabellen
 
-Campus: Test
+```{r}
+#| label: legende tabelle
+#| fig.height: 2.7
+#| fig.width: 10
+#| fig.align: center
+
+# Beispiel Tabelle
+jim <- as.data.frame(cbind("Frage", "Häufigkeit", "Mittelwert", "Standard-\nabweichung", "Median", "kleinster \nbeob. Wert", "größter \nbeob. Wert"))
+
+colnames(jim) <- c("Item", "n", "M", "SD", "MD", "Min", "Max")
+
+lv.kable(jim, col.width = c(11, 18, 18, 22, 13, 22, 22)) # returns object 'latex.table'
+
+```
+
+-   *"Häufigkeit (n)"* - absolute Häufigkeit, Anzahl
+-   *"NA"* - steht für fehlende Werte bzw. keine Angabe
+-   *"Prozent (%)"* - prozentuale Häufigkeit, bezieht sich auf alle Werte inkl. NA
+-   *"gültige %"* - prozentuale Häufigkeit bei Ausschluss von NA
+
+## Zusätzliche Hinweise
+
+-   Die hier präsentierten Angaben sind zumeist **aggregierte Mittelwerte pro LVE** (jede LV geht also mit Ihrem Mittelwert pro Item ein). 'N~courses~' gibt dabei an, wie viele LV-Mittelwerte wiederum jeweils zusammengefasst wurden.
+
+-   Bei Fragen, die mit **eckigen Klammertermen beginnen** (z.B. \[F\], \[BSc\], \[MSc\]), handelt es sich um FILTERFRAGEN: je nach vorheriger Angabe also für die Teilnehmer der Online-Umfrage ggf. nicht sichtbar \[kummulierte Prozent deshalb möglicherweise \<100\].
+
+-   Manche Fragen wurden im **Multiple-Choice-Format** (Mehrfachnennung möglich \[MC\]) programmiert, können also MEHRFACHANTWORTEN enthalten \[\~ kummulierte Prozent deshalb möglicherweise \>100\].
+
+## Erläuterung zu Grafiken
+
+Ein **Boxplot** (auch 'Box-Whisker-Plot', dt. Kastengrafik) ist ein Diagramm der Häufigkeitsverteilung, welches verschiedene Streuungs- und Lagemasse graphisch zusammenfasst. Der Boxplot besteht aus einer Box und 2 Linien ('Whisker', dt. Antennen genannt), die diese verlängern; der Strich in der Box repräsentiert den Median der Verteilung.
+
+-   *Box*: Bereich, in dem die mittleren 50% der Daten liegen
+-   *Median (MD)*: teilt das gesamte Diagramm in zwei Bereiche, in denen jeweils 50 % der Daten liegen
+-   *Min/Max*: Ende des linken/rechten Whiskers (oder entferntester Ausreißer)
+
+**Modus**: häufigste/r Angabe/Wert ~\[nicht in Beispiel-Abbildung!\]~
+
+```{r}
+#| label: Beispiel Boxplot
+#| fig.height: 2.7
+#| fig.width: 10
+#| fig.align: center
+
+#Daten für Beispiel Boxplot
+bspdata <- c(2.1, 3.9, 3.9, 3.9, 3.9, 4.4, 4.4, 4.5, 4.5, 4.7, 4.7, 5, 5, 5.2, 5, 5.5, 5.5, 5.5, 5.5, 5.7, 5.7, 5.7, 5.7, 5.7)
+
+bsp.boxplot(bspdata)
+```
+
+
+```{r}
+#| label: inkl und platzhalter
+#| include: FALSE
+
+#+#################+#
+#### PLATZHALTER ####
+#+#################+#
+
+FB_txt      <- Info$FB.txt[i]
+
+# Falls notwendig einfügen, z.B.:
+# Campus      <- Info$Campus[i] # brauchen wir das noch?
+
+
+```
+
+{{< pagebreak >}}
+
+# Stichprobenbeschreibung 
+
+**Stichprobe/Fachbereich:** `r Info$Stichprobe.txt[i]`
+
+**Zeitraum:** `r Info$Zeitraum[i]`
+
+**Fragebogen:** LVE-Basis
+
+\
+
+**Anzahl insgesamt erstellter LVE-Umfragen o.g. Zeitraum:** $N_{surveys} = PLATZHALTER$
+
+**Anzahl LVE-Umfragen, die in diesen Bericht eingingen (Mindestrücklauf 3 Stimmen):** $N_{courses} = `r length(unique(data$Kennung))`$
+
+**Anzahl Stimmen, die in diesen Bericht eingingen:** $N_{votes} = `r nrow(data)`$
 
 \
 \
-\
 
-Insgesamt ausgefüllte Umfragen: ...
+```{r}
+#| label: ruecklauf
+#| fig.height: 2
+#| fig.width: 6
+#| fig.align: center
+#| eval: !expr 'bericht == "LVE"'
+
+cat("## Rücklauf  \n  \n")
+
+boxplot.ruecklauf(data$Teilnehmer, kennung = data$Kennung)
+writeLines("\n")
+
+cat("*HINWEIS: Die Berechnung des Rücklaufs basiert auf den Angaben zur Teilnehmendenzahl \nbei der Anmeldung zur LVE und **kann deshalb >100%** ausfallen!*  \n  \n")
+```
+
+<!-- Brauchen wir sonst noch etwas für die Stichprobenbeschreibung? -->
 
 
+{{< pagebreak >}}
 
+```{r}
+#| label: Datenselektion
+
+# Hier ein Beispiel der LVE:
+
+# Daten kopieren, damit daraus nach dem Bilden der Teilmengen die Labels entnommen werden können 
+data.copy <- data
+
+# Daten des entsprechenden Fachbereichs wählen
+data <- data[which(data$Teilbereich == FB_txt), ] #}
+
+ # Bachelordatensatz: Nehme alle, die bei einer der Fragen zu Bachelorabschlüssen etwas angekreut haben
+data.b <- data[which(data$StuAbschl_1 != 0 | 
+                     data$StuAbschl_2 != 0 | 
+                     data$StuAbschl_3 != 0 | 
+                     data$StuAbschl_4 != 0), ]
+
+# Masterdatensatz: Nehme alle, die bei einer der Fragen zu Masterabschlüssen etwas angekreut haben
+data.m <- data[which(data$StuAbschl_5 != 0 | 
+                     data$StuAbschl_6 != 0 | 
+                     data$StuAbschl_7 != 0), ]
+
+
+# Übertrage die Labels
+data <- sjlabelled::copy_labels(data, data.copy)
+# TO-DO: Anders lösen
+
+# Entferne die Kopie
+rm(data.copy)
+```
+
+```{r}
+#| label: Fachsem
+#| fig.height: 5
+#| fig.width: 10
+#| fig.align: center
+#| eval: !expr 'bericht == "LVE"'
+
+# TO-DO: schauen, wie es bei Kohortenbefragungen gelöst wird: Einheitlich machen
+
+# Falls es im Bericht nicht jeweils auf eine Seite passt: "fig.height" oben im Chunk auf "4" stellen 
+# (oder alternativ in den Daten alles über einem bestimmten Fachsemester in "höher als" zusammenfassen)
+
+merge.fachsem(data$FachSemN)
+cat("{{< pagebreak >}} \n  \n")
+
+# merge.fachsem(data.b$FachSemN, cutoff = 12, group = "b")
+# cat("{{< pagebreak >}} \n  \n")
+
+# merge.fachsem(data.m$FachSemN, cutoff = 12, group = "m")
+# cat("{{< pagebreak >}} \n  \n")
+
+# Wirklich Aufschlüsselung nach Abschluss nötig?
+
+```
+
+# Veranstaltungsbewertungen: Kernfragen
+
+```{r}
+#| label: KF
+#| fig.align: center
+
+cat("## Kernfragen: Items mit 6-stufiger Antwortskala  \n  \n")
+
+# Falls man einen Fragetext ändern möchte (z.B. in Abkürzung)
+# Hmisc::label(datensatz$beispiel) <- "" # In die Anführungsstriche neues Label (z.B. Abkürzung einfügen) 
+
+tmp <- data[, c(
+"KF_01",
+"KF_02", 
+"KF_03"
+# "KFz_3_1N",
+# "KF_04",
+# "KFz_4_1N",
+# "KF_05",
+# "KF_06NN",
+# "KFz_8_2N",
+# "KFz_4_4NN",
+# "KFz_4_3N",
+# "KFz_3_2"
+)]
+
+merge.multi.sk(tmp, # Objekt mit den Fragen
+              kennung = data$Kennung, # Spalte aus Daten mit Kennungen
+              number = 6,
+              show.table = TRUE, # Soll eine Tabelle mit angezeigt werden? Default ist TRUE
+              aggr = TRUE) #aggr = FALSE Sind die Daten bereits aggregiert? Default ist FALSE -> alte Funktionsdatei
+
+cat("{{< pagebreak >}}  \n  \n")
+```
+
+```{r}
+#| label: sk5 KF5
+#| fig.align: center
+#| eval: false
+
+cat("## Kernfragen: Items mit 5-stufiger Antwortskala  \n  \n")
+
+merge.multi.sk(data$KF_09Anfo, number = 5, kennung = data$Kennung, aggr = TRUE)
+
+cat(rep("\u200B  \n", 2)) # vertical space
+
+merge.multi.sk(data$KF_10, number = 5, kennung = data$Kennung, aggr = TRUE)
+
+cat("{{< pagebreak >}}  \n  \n")
+```
+
+```{r}
+#| label: grade
+#| fig.align: center
+#| eval: false
+
+cat("# Gesamtbewertung  \n  \n")
+
+# Gesamtnote
+grade(data$GES_Note2, kennung = data$Kennung, show.table = TRUE)
+
+cat("{{< pagebreak >}}  \n  \n")
+```
+
+```{r}
+#| label: wlpres
+#| fig.align: center
+#| fig.height: 3.5
+#| fig.width: 7
+#| eval: false
+
+cat("# Angaben zu Workload und Gruppengröße \n  \n")
+
+merge.multi.sk(data$V3_B, kennung = data$Kennung, aggr = TRUE)
+cat(rep("\u200B  \n", 2)) # vertical space
+merge.multi.sk(data$V3_C, kennung = data$Kennung, aggr = TRUE)
+
+merge.sc(data$V3_D)
+cat("{{< pagebreak >}}  \n  \n")
+merge.sc(data$V3_E)
+cat("{{< pagebreak >}}  \n  \n")
+cat("### Zusätzlich zu Ihren Anwesenheitszeiten in der Veranstaltung: Wie viel Zeit (in Zeitstunden) haben Sie für die vorliegende Veranstaltung im Schnitt pro Woche aufgewendet? (ohne Prüfungsvorbereitung) \n \n")
+merge.wl(ECTS = data$ECTS, WL = data$WL_01, kennung = data$Kennung)
+
+cat(rep("\u200B  \n", 2)) # vertical space
+cat("\n")
+
+cat("### Zusätzlich zu der in vorheriger Frage (oben) angegebenen Zeit: Wie viel Zeit (in Zeitstunden) haben und werden Sie bezogen auf die vorliegende Veranstaltung für die Prüfungsvorbereitung insgesamt aufwenden? \n \n")
+
+merge.wl(ECTS = data$ECTS, WL = data$WL_02, kennung = data$Kennung)
+```
+
+```{r}
+#| label: Lehrpreis
+#| fig.align: center
+#| eval: false
+
+if (Auswahl != "Basis") {
+cat("{{< pagebreak >}}  \n  \n")
+cat("## Lehrpreis  \n  \n")
+
+if (Auswahl == "Psych"){
+  tmp <- data[, c(
+  "LP8_1",
+  "LP8_2",
+  "LP8_3",
+  "LP8_4",
+  "LP8_5"
+  )
+  ]
+}
+merge.multi.sk(tmp, kennung = data$Kennung, number = 6, aggr = TRUE)
+
+cat("{{< pagebreak >}}  \n  \n")
+cat("### Nur für Seminare und Übungen  \n  \n")
+
+if (Auswahl == "Psych"){
+  tmp <- data[, c(
+  "LP8_S1",
+  "LP8_S2",
+  "LP8_S3",
+  "LP8_S4"
+  )
+  ]
+}
+merge.multi.sk(tmp, kennung = data$Kennung, number = 6, aggr = TRUE)
+
+cat("{{< pagebreak >}}  \n  \n")
+}
+```
 
