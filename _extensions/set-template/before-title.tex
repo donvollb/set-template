@@ -19,16 +19,16 @@
 \usepackage{fontspec}             % für Schriftarten
 \usepackage{hyperref}             % für Hyperlinks
 \usepackage{geometry}             % für Seitenränder
-\usepackage{tocloft}              % für Inhaltsverzeichnismodifikationen
-\usepackage{titlesec}             % für Überschriftenmodifikationen
+\usepackage{tocloft}              % für Inhaltsverzeichnismodifikationen 
+% \usepackage{titlesec}           % für Überschriftenmodifikationen --- Auskommentiert, weil es für Probleme beim Inhaltsverzeichnis sorgt ---
 \usepackage{datatool}             % für Laden der Info.csv im Partial Template (before-body.tex)
 
  % Ab hier beginnt das Setup für die Hyperlinks
 \hypersetup{
-colorlinks=true,                  % farbige Links?
-linkcolor=blue,                   % Farbe der Hyperlinks zu Abschnitten innerhalb des Dokuments
-filecolor=magenta,                % Farbe von Hyperlinks zu Dateien
-urlcolor=cyan}                    % Farbe von URLs
+ colorlinks=true,                  % farbige Links?
+ linkcolor=blue,                   % Farbe der Hyperlinks zu Abschnitten innerhalb des Dokuments
+ filecolor=magenta,                % Farbe von Hyperlinks zu Dateien
+ urlcolor=cyan}                    % Farbe von URLs
 
 
 
@@ -43,9 +43,10 @@ urlcolor=cyan}                    % Farbe von URLs
 
 
 % Hier wird das Layout der Section-Überschriften verändert (zentriert)
-\titleformat{\section}
-{\normalfont\Large\bfseries\center}
-{\thesection}{1em}{}
+% --- Auskommentiert, weil es für Probleme beim Inhaltsverzeichnis sorgt ---
+% \titleformat{\section}
+% {\normalfont\Large\bfseries\center}
+% {\thesection}{1em}{}
   
   
 % Hier werden einige Farben für die Verwendung im LATEX-Code definiert
