@@ -76,16 +76,15 @@ change.analysis.defaults(show.plot.sc = FALSE, # Plots der SC-Fragen anzeigen?
 
 ##### 4. Chunk Einstellungen ####
 
-# knitr::opts_chunk$set(
-# 	comment = "",
-# 	# dev = "cairo_pdf",
-# 	results = "asis",
+knitr::opts_chunk$set(
+  fig.align = 'center'
+# 	comment = "",         Alle auskommentierten Einstellungen
+# 	# dev = "cairo_pdf",  werden inwischen über die extension
+# 	results = "asis",     yaml gelöst.
 # 	echo = FALSE,
 # 	warning = FALSE,
 # 	message = FALSE
-# )
-
-# Mal noch drinlassen, falls wir Cairo doch brauchen. Der Rest ist jetzt im extension yaml.
+)
 
 
 #### C - DATENSÄTZE LADEN ####
@@ -109,55 +108,7 @@ rm(data_all)
 # Kennung in Integer umwandeln
 data$Kennung<-as.integer(data$Kennung) # nur LVE
 ```
-
 {{< pagebreak >}}
-
-# Allgemeine Angaben und Hinweise
-
-## Legende zu Tabellen
-
-```{r}
-#| label: legende tabelle
-#| fig.height: 2.7
-#| fig.width: 10
-#| fig.align: center
-
-# Beispiel Tabelle
-bsp.table.stat()
-```
-
--   *"Häufigkeit (n)"* - absolute Häufigkeit, Anzahl
--   *"NA"* - steht für fehlende Werte bzw. keine Angabe
--   *"Prozent (%)"* - prozentuale Häufigkeit, bezieht sich auf alle Werte inkl. NA
--   *"gültige %"* - prozentuale Häufigkeit bei Ausschluss von NA
-
-## Zusätzliche Hinweise
-
--   Die hier präsentierten Angaben sind zumeist **aggregierte Mittelwerte pro LVE** (jede LV geht also mit Ihrem Mittelwert pro Item ein). 'N~courses~' gibt dabei an, wie viele LV-Mittelwerte wiederum jeweils zusammengefasst wurden.
-
--   Bei Fragen, die mit **eckigen Klammertermen beginnen** (z.B. \[F\], \[BSc\], \[MSc\]), handelt es sich um FILTERFRAGEN: je nach vorheriger Angabe also für die Teilnehmer der Online-Umfrage ggf. nicht sichtbar \[kummulierte Prozent deshalb möglicherweise \<100\].
-
--   Manche Fragen wurden im **Multiple-Choice-Format** (Mehrfachnennung möglich \[MC\]) programmiert, können also MEHRFACHANTWORTEN enthalten \[\~ kummulierte Prozent deshalb möglicherweise \>100\].
-
-## Erläuterung zu Grafiken
-
-Ein **Boxplot** (auch 'Box-Whisker-Plot', dt. Kastengrafik) ist ein Diagramm der Häufigkeitsverteilung, welches verschiedene Streuungs- und Lagemasse graphisch zusammenfasst. Der Boxplot besteht aus einer Box und 2 Linien ('Whisker', dt. Antennen genannt), die diese verlängern; der Strich in der Box repräsentiert den Median der Verteilung.
-
--   *Box*: Bereich, in dem die mittleren 50% der Daten liegen
--   *Median (MD)*: teilt das gesamte Diagramm in zwei Bereiche, in denen jeweils 50 % der Daten liegen
--   *Min/Max*: Ende des linken/rechten Whiskers (oder entferntester Ausreißer)
-
-**Modus**: häufigste/r Angabe/Wert ~\[nicht in Beispiel-Abbildung!\]~
-
-```{r}
-#| label: Beispiel Boxplot
-#| fig.height: 2.7
-#| fig.width: 10
-#| fig.align: center
-
-bsp.boxplot()
-```
-
 
 ```{r}
 #| label: inkl und platzhalter
@@ -183,16 +134,13 @@ FB_txt      <- Info$FB.txt[i]
 
 **Zeitraum:** `r Info$Zeitraum[i]`
 
-**Fragebogen:** `r Info$Auswahl[i]`
-
 \
 
-**Anzahl insgesamt erstellter LVE-Umfragen o.g. Zeitraum:** $N_{surveys} = PLATZHALTER$
+**Anzahl insgesamt erstellter LVE-Umfragen o.g. Zeitraum:** `r Info$N.Umfragen.alle[i]`
 
-**Anzahl LVE-Umfragen, die in diesen Bericht eingingen (Mindestrücklauf 3 Stimmen):** $N_{courses} = `r length(unique(data$Kennung))`$
+**Anzahl LVE-Umfragen, die in diesen Bericht eingingen (Mindestrücklauf 3 Stimmen):** `r length(unique(data$Kennung))` (N~courses~)
 
-**Anzahl Stimmen, die in diesen Bericht eingingen:** $N_{votes} = `r nrow(data)`$
-
+**Anzahl Stimmen, die in diesen Bericht eingingen:** `r nrow(data)`
 \
 \
 
@@ -200,7 +148,6 @@ FB_txt      <- Info$FB.txt[i]
 #| label: ruecklauf
 #| fig.height: 2
 #| fig.width: 6
-#| fig.align: center
 #| eval: !expr 'bericht == "LVE"'
 
 cat("## Rücklauf  \n  \n")
@@ -251,7 +198,6 @@ rm(data.copy)
 #| label: Fachsem
 #| fig.height: 5
 #| fig.width: 10
-#| fig.align: center
 #| eval: !expr 'bericht == "LVE"'
 
 # TO-DO: schauen, wie es bei Kohortenbefragungen gelöst wird: Einheitlich machen
@@ -276,7 +222,6 @@ cat("{{< pagebreak >}} \n  \n")
 
 ```{r}
 #| label: KF
-#| fig.align: center
 
 cat("## Kernfragen: Items mit 6-stufiger Antwortskala  \n  \n")
 
@@ -292,16 +237,20 @@ tmp <- data[, c(
 # "KFz_4_1N",
 # "KF_05",
 # "KF_06NN",
+# "KF_07",
+# "KF_08",
 # "KFz_8_2N",
 # "KFz_4_4NN",
 # "KFz_4_3N",
-# "KFz_3_2"
+# "KFz_3_2",
+# "ap_rel"
 )]
 
 merge.multi.sk(tmp, # Objekt mit den Fragen
               kennung = data$Kennung, # Spalte aus Daten mit Kennungen
               number = 6,
               show.table = TRUE, # Soll eine Tabelle mit angezeigt werden? Default ist TRUE
+             #fig.height = 12.5, # damit der Plot gleich breit ist wie die andern
               aggr = TRUE) #aggr = FALSE Sind die Daten bereits aggregiert? Default ist FALSE -> alte Funktionsdatei
 
 cat("{{< pagebreak >}}  \n  \n")
@@ -309,23 +258,21 @@ cat("{{< pagebreak >}}  \n  \n")
 
 ```{r}
 #| label: sk5 KF5
-#| fig.align: center
 #| eval: false
 
 cat("## Kernfragen: Items mit 5-stufiger Antwortskala  \n  \n")
 
-merge.multi.sk(data$KF_09Anfo, number = 5, kennung = data$Kennung, aggr = TRUE)
+merge.multi.sk(data$KF_10, number = 5, kennung = data$Kennung, aggr = TRUE)
 
 cat(rep("\u200B  \n", 2)) # vertical space
 
-merge.multi.sk(data$KF_10, number = 5, kennung = data$Kennung, aggr = TRUE)
+merge.multi.sk(data[, c("KF_09Anfo", "KFz_4_5N")], number = 5, kennung = data$Kennung, aggr = TRUE)
 
 cat("{{< pagebreak >}}  \n  \n")
 ```
 
 ```{r}
 #| label: grade
-#| fig.align: center
 #| eval: false
 
 cat("# Gesamtbewertung  \n  \n")
@@ -333,12 +280,16 @@ cat("# Gesamtbewertung  \n  \n")
 # Gesamtnote
 grade(data$GES_Note2, kennung = data$Kennung, show.table = TRUE)
 
+cat(rep("\u200B  \n", 2)) # vertical space
+
+# SoSe25: Lehrpreis jetzt bei Gesamtbewertung und für alle Fachbereiche
+merge.multi.sk(data$LP, kennung = data$Kennung, number = 6, aggr = TRUE)
+
 cat("{{< pagebreak >}}  \n  \n")
 ```
 
 ```{r}
 #| label: wlpres
-#| fig.align: center
 #| fig.height: 3.5
 #| fig.width: 7
 #| eval: false
@@ -353,53 +304,57 @@ merge.sc(data$V3_D)
 cat("{{< pagebreak >}}  \n  \n")
 merge.sc(data$V3_E)
 cat("{{< pagebreak >}}  \n  \n")
-cat("### Zusätzlich zu Ihren Anwesenheitszeiten in der Veranstaltung: Wie viel Zeit (in Zeitstunden) haben Sie für die vorliegende Veranstaltung im Schnitt pro Woche aufgewendet? (ohne Prüfungsvorbereitung) \n \n")
-merge.wl(ECTS = data$ECTS, WL = data$WL_01, kennung = data$Kennung)
+
+merge.wl(WL = data$WL_01, kennung = data$Kennung)
 
 cat(rep("\u200B  \n", 2)) # vertical space
 cat("\n")
 
-cat("### Zusätzlich zu der in vorheriger Frage (oben) angegebenen Zeit: Wie viel Zeit (in Zeitstunden) haben und werden Sie bezogen auf die vorliegende Veranstaltung für die Prüfungsvorbereitung insgesamt aufwenden? \n \n")
-
-merge.wl(ECTS = data$ECTS, WL = data$WL_02, kennung = data$Kennung)
+merge.wl(WL = data$WL_02, kennung = data$Kennung)
+cat("{{< pagebreak >}}  \n  \n")
 ```
 
+# Erläuterungen und Hinweise
+
+## Legende zu Tabellen
+
 ```{r}
-#| label: Lehrpreis
-#| fig.align: center
-#| eval: false
+#| label: legende tabelle
+#| fig.height: 2.7
+#| fig.width: 10
 
-if (Auswahl != "Basis") {
-cat("{{< pagebreak >}}  \n  \n")
-cat("## Lehrpreis  \n  \n")
+# Beispiel Tabelle
+bsp.table.stat()
+```
 
-if (Auswahl == "Psych"){
-  tmp <- data[, c(
-  "LP8_1",
-  "LP8_2",
-  "LP8_3",
-  "LP8_4",
-  "LP8_5"
-  )
-  ]
-}
-merge.multi.sk(tmp, kennung = data$Kennung, number = 6, aggr = TRUE)
+-   *"NA"* - steht für fehlende Werte bzw. keine Angabe
+-   *"Prozent (%)"* - prozentuale Häufigkeit, bezieht sich auf alle Werte inkl. NA
+-   *"gültige %"* - prozentuale Häufigkeit bei Ausschluss von NA
 
-cat("{{< pagebreak >}}  \n  \n")
-cat("### Nur für Seminare und Übungen  \n  \n")
+## Erläuterung zu Grafiken
 
-if (Auswahl == "Psych"){
-  tmp <- data[, c(
-  "LP8_S1",
-  "LP8_S2",
-  "LP8_S3",
-  "LP8_S4"
-  )
-  ]
-}
-merge.multi.sk(tmp, kennung = data$Kennung, number = 6, aggr = TRUE)
+Ein **Boxplot** (auch 'Box-Whisker-Plot', dt. Kastengrafik) ist ein Diagramm der Häufigkeitsverteilung, welches verschiedene Streuungs- und Lagemasse graphisch zusammenfasst. Der Boxplot besteht aus einer Box und 2 Linien ('Whisker', dt. Antennen genannt), die diese verlängern; der Strich in der Box repräsentiert den Median der Verteilung.
 
-cat("{{< pagebreak >}}  \n  \n")
-}
+-   *Box*: Bereich, in dem die mittleren 50% der Daten liegen
+-   *Median (MD)*: teilt das gesamte Diagramm in zwei Bereiche, in denen jeweils 50 % der Daten liegen
+-   *Min/Max*: Ende des linken/rechten Whiskers (oder entferntester Ausreißer)
+
+**Modus**: häufigste/r Angabe/Wert ~\[nicht in Beispiel-Abbildung!\]~
+
+## Zusätzliche Hinweise
+
+-   Die hier präsentierten Angaben sind zumeist **aggregierte Mittelwerte pro LVE** (jede LV geht also mit Ihrem Mittelwert pro Item ein). 'N~courses~' gibt dabei an, wie viele LV-Mittelwerte wiederum jeweils zusammengefasst wurden.
+
+-   Bei Fragen, die mit **eckigen Klammertermen beginnen** (z.B. \[F\], \[BSc\], \[MSc\]), handelt es sich um FILTERFRAGEN: je nach vorheriger Angabe also für die Teilnehmer der Online-Umfrage ggf. nicht sichtbar \[kummulierte Prozent deshalb möglicherweise \<100\].
+
+-   Manche Fragen wurden im **Multiple-Choice-Format** (Mehrfachnennung möglich \[MC\]) programmiert, können also Mehrfachantworten enthalten \[\~ kummulierte Prozent deshalb möglicherweise \>100\].
+
+
+```{r}
+#| label: Beispiel Boxplot
+#| fig.height: 2.7
+#| fig.width: 10
+
+bsp.boxplot()
 ```
 
