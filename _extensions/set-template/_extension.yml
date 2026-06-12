@@ -16,6 +16,19 @@ contributes:
         warning: false
         message: false
         comment: ''
+    typst:
+      template-partials:
+        - typst-template.typ
+        - typst-show.typ
+      margin:
+        left: 2cm
+        right: 2cm
+        top: 3cm
+        bottom: 2cm
+      variables:
+        - accent_col
+      
+    
     pdf:
       pdf-engine: xelatex
       template-partials: 
