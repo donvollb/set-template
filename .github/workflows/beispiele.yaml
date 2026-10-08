@@ -36,6 +36,7 @@ jobs:
             github::donvollb/setanalysis@dev
             any::rmarkdown
             any::quarto
+            any::pdftools
 
       - name: LVE-Beispiel (alle vier Berichte)
         run: |
@@ -50,6 +51,17 @@ jobs:
         run: |
           Rscript beispiele/alle-berichte-rendern.R
           Rscript -e 'p <- read.csv2("berichte/protokoll.csv"); print(p[, c("Code", "N", "Status")]); stopifnot(all(p$Status == "erstellt"))'
+
+      # Auf dem Runner ist Red Hat Text nicht installiert; fehlt sie im PDF, hat Typst die
+      # mitgelieferte Schrift nicht gefunden und still eine Ersatzschrift verwendet
+      - name: Schrift in allen PDFs prüfen
+        run: |
+          Rscript -e '
+            pdfs <- c(Sys.glob("lve_*.pdf"), Sys.glob("berichte/*.pdf"))
+            ok <- vapply(pdfs, function(f) any(grepl("RedHatText", pdftools::pdf_fonts(f)$name)), logical(1))
+            print(ok)
+            stopifnot(length(pdfs) == 10, all(ok))
+          '
 
       - uses: actions/upload-artifact@v4
         with:

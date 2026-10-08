@@ -19,7 +19,13 @@ contributes:
         top: 3cm
         bottom: 2cm
       mainfont: "Red Hat Text"
-      font-paths: fonts # Schrift wird mitgeliefert (SIL Open Font License, siehe fonts/OFL.txt)
+      # Schrift wird mitgeliefert (SIL Open Font License, siehe fonts/OFL.txt).
+      # Quarto macht "fonts" relativ zum Dokument, Typst sucht aber relativ zum Ordner, in dem
+      # quarto aufgerufen wurde. Der zweite Pfad gilt vom Projekt-Hauptordner aus, damit die Schrift
+      # auch gefunden wird, wenn ein Dokument in einem Unterordner von dort gerendert wird.
+      font-paths:
+        - fonts
+        - _extensions/set-template/fonts
       fontsize: 10pt
       lang: de
 
