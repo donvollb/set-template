@@ -1,0 +1,6 @@
+project:
+  type: default
+  # Was `quarto render` ohne Dateiangabe rendert (interne Notizen ausgenommen)
+  render:
+    - "*.qmd"
+    - "!notes/"

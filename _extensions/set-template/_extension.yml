@@ -1,45 +1,40 @@
 title: set-template
 author: donvollb
-version: 1.0.0
-quarto-required: ">=1.6.0"
+version: 2.0.0
+quarto-required: ">=1.7.0"
 contributes:
   formats:
-    common:
+    typst:
+      template-partials:
+        - typst-template.typ
+        - typst-show.typ
+      filters:
+        - path: chunk-ausgabe.lua
+          at: post-render
+
+      # Seite und Schrift
       papersize: a4
+      margin:
+        x: 2cm
+        top: 3cm
+        bottom: 2cm
+      mainfont: "Red Hat Text" # muss installiert sein, siehe README
+      fontsize: 10pt
+      lang: de
+
+      # Inhaltsverzeichnis auf der ersten Seite
       toc: true
       toc-title: INHALTSVERZEICHNIS
       toc-depth: 1
-      mainfont: "Red Hat Text" # muss auf dem Rechner installiert sein (bei Windows am besten für alle Benutzer, siehe Readme in github)
+
+      # Kopf- und Fußzeile (im Dokument überschreibbar)
+      accent_col: "#507289" # Akzentfarbe für Linien, Links, Logo und Hervorhebungen
+      header-logo: images/Logo Meze - Cobranding.svg
+      lfoot: ""
+
+      # setanalysis gibt fertigen Berichtscode aus, daher "asis" und kein Code im Bericht
       execute:
         echo: false
         output: asis
         warning: false
         message: false
-        comment: ''
-    typst:
-      template-partials:
-        - typst-template.typ
-        - typst-show.typ
-      margin:
-        left: 2cm
-        right: 2cm
-        top: 3cm
-        bottom: 2cm
-      variables:
-        - accent_col
-      
-    
-    pdf:
-      pdf-engine: xelatex
-      template-partials: 
-      - before-title.tex
-      lheadlogo: images/RPTU_line.png
-      rheadlogo: images/meze_blue.png
-      geometry:
-        - left = 2cm
-        - right = 2cm
-        - top = 3cm
-        - bottom = 2cm
-        - headheight = 2cm
-        - footskip = 1.5cm
-

@@ -1,405 +1,191 @@
 ---
-format:
-  set-template-pdf: default
+title: "Bericht der Lehrveranstaltungsevaluation (LVE)"
+subtitle: "Beispielbericht" # wird pro Bericht durch den Namen des Fachbereichs ersetzt
+format: set-template-typst
+
+lfoot: "LVE-Bericht SoSe 2025"  # Text links in der Fußzeile
+accent_col: "#507289"           # Akzentfarbe für Layout und Grafiken (hier: RPTU blaugrau)
 
 params:
-  i: 4 # Hier modifizieren: i gibt die Zeile der info Datei an und steht für einen Bericht (1: EzW, 2: KSW, 3: NUW, 4: Psych)
-  zeitraum: SoSe25 # Hier modifizieren: Aktuelles Zeitraumskuerzel (z.B. SoSe24, WiSe24/25) fuer die Fusszeile
-  report_title: Beispielbericht
-  inkl.protokoll: FALSE # So lassen, wird nur von der Automatisierungsschleife genutzt 
-
-color: bluegray
-  # alternativ kann man eigene Farben über \definecolor definieren und sie "maincolor" und "tablecolor" nennen.
-  # mögliche Farben: bluegray, greengray, darkblue, lightblue, darkgreen, lightgreen, violett, pink, red, orange (RPTU-Standardfarben)
-
-title: "**{{< meta params.report_title >}}**"
-lfoot: "Beispielbericht {{< meta params.zeitraum >}}"
+  i: 1 # Zeile der Info-Tabelle, d. h. welcher Bericht erstellt wird (1 bis 4 = Fachbereiche)
 ---
 
 ```{r}
 #| label: setup
-#| include: FALSE
+#| include: false
 
-
-# ÄÖU richtig angezeigt? (Reopen with Encoding: UTF-8)
-
-# FUNKTION DES CHUNKS:
-# Pakete laden, Globale Variablen setzen und Datensätze/Funktionsdatei einlesen
-
-#### A - PAKETE ####
-#Mit der Pacman-Funktion werden die nötigen Pakete geladen und fehlende installiert. Bei Bedarf wird sie erweitert
-suppressPackageStartupMessages(if(!require(pacman)){install.packages("pacman")})
-pacman::p_load(tidyverse,
-               devtools)
-
-# Eigenes Paket aus github laden
-if (!require(setanalysis)) {devtools::install_github("donvollb/setanalysis")}
 library(setanalysis)
 
+# Einstellungen -----------------------------------------------------------
 
-#### B - GLOBALE VARIABLEN ####
+# Beim Rendern kommen params und Akzentfarbe aus dem YAML-Kopf.
+# Wird der Code direkt ausgeführt (z. B. in RStudio), gelten diese Ersatzwerte:
+if (!exists("params")) params <- list(i = 1)
+akzentfarbe <- rmarkdown::metadata$accent_col
+if (is.null(akzentfarbe)) akzentfarbe <- setanalysis_defaults$color.bars
 
-##### 1. Variable #####
+i <- params$i
 
+change_analysis_defaults(
+  color.bars   = akzentfarbe, # gleiche Farbe wie im Layout
+  show.plot.sc = TRUE,        # Abbildungen bei Single-Choice-Fragen
+  show.plot.mc = FALSE,       # Abbildungen bei Multiple-Choice-Fragen
+  show.plot.sk = TRUE         # Abbildungen bei Skalenfragen
+)
 
-# i Variable
-if(exists("params")) i <- params$i # i gibt die Zeile der info Datei an und steht für einen Bericht (Anpassung im YAML)
-
-
-
-###### Modifizierbare Werte ######
-
-if(!exists("i")) i <- 1 # falls i nicht existiert, wird es auf 1 gesetzt
-
-
-# Berichtart Variable -> # LVE, ABS, STUD, SHOWUP? 
-  bericht <- "LVE"
-      # Um welchen Bericht handelt es sich? # Diese Variable wird gewählt um bspw. das Farbchema zu setzten
-      # WICHTIG: Einhalten der Abkürzung!
-  
-##### 2. Farbsetting #####
-  
-#Farbe der Balken/Text, unbedingt einstellen! -> automatisiert
-
-if (bericht == "ABS")   setanalysis::change.analysis.defaults(color.bars = "#4c3575") # violett (Pflaume)
-if (bericht == "STUD")  setanalysis::change.analysis.defaults(color.bars = "#77b6ba") # grüngrau (Ozean)
-if (bericht == "SHOWUP")setanalysis::change.analysis.defaults(color.bars = "#6ab2e7") # hellblau (Tag)
-if (bericht == "LVE")   setanalysis::change.analysis.defaults(color.bars = "#507289") # blaugrau (Schiefer)
-
-  
-##### 3. Einstellungen zu Grafiken #####
-
-change.analysis.defaults(show.plot.sc = FALSE, # Plots der SC-Fragen anzeigen?
-                         show.plot.mc = FALSE, # Plots der MC-Fragen anzeigen?
-                         show.plot.sk = TRUE)  # Plots der SK-Fragen anzeigen?
+knitr::opts_chunk$set(fig.align = "center")
 
 
-##### 4. Chunk Einstellungen ####
+# Hilfsfunktionen ---------------------------------------------------------
 
-# knitr::opts_chunk$set(
-# 	comment = "",
-# 	# dev = "cairo_pdf",
-# 	results = "asis",
-# 	echo = FALSE,
-# 	warning = FALSE,
-# 	message = FALSE
-# )
+# Zeilen auswählen, ohne die Attribute (Fragetext, Fragetyp, Antwortcodes) zu verlieren
+zeilen_waehlen <- function(daten, auswahl) {
+  neu <- daten[auswahl, , drop = FALSE]
+  for (spalte in names(daten)) {
+    mostattributes(neu[[spalte]]) <- attributes(daten[[spalte]])
+  }
+  neu
+}
 
-# Mal noch drinlassen, falls wir Cairo doch brauchen. Der Rest ist jetzt im extension yaml.
-
-
-#### C - DATENSÄTZE LADEN ####
+# Vertikaler Abstand aus einem Chunk heraus
+abstand <- function(hoehe = "2em") cat("\n\n```{=typst}\n#v(", hoehe, ")\n```\n\n", sep = "")
 
 
-# Daten einlesen
+# Daten -------------------------------------------------------------------
 
-# Beispieldatensatz aus {setanalysis}
-data_all <- setanalysis::BspDaten
-Info <- data_all$pInfo
-data <- data_all$dataLVE # LVE-Test
-# data <- data_all$dataSHOWUP # KOHORT Test
-rm(data_all)
+# Zufällig erzeugte Beispieldaten (siehe daten/beispieldaten_erzeugen.R);
+# echte Daten z. B. mit evasys_read_data() einlesen
+info  <- read.csv2("daten/lve_info.csv", fileEncoding = "UTF-8") # eine Zeile pro Bericht
+daten <- readRDS("daten/lve.rds")                                # eine Zeile pro Stimme
 
+# Nur die Stimmen aus dem Fachbereich dieses Berichts
+daten <- zeilen_waehlen(daten, daten$Teilbereich == info$Teilbereich[i])
+```
 
-# "echte Daten"
+```{r}
+#| label: titel
 
-# load(file="./Daten/Basisdaten.rda")
-# Info <- read_delim("Info.csv", delim = ";", escape_double = FALSE, trim_ws = TRUE)
+# Untertitel pro Bericht aus der Info-Tabelle (überschreibt den Wert im YAML-Kopf)
+cat('\n---\nsubtitle: "', info$Stichprobe[i], '"\n---\n\n', sep = "")
+```
 
-# Kennung in Integer umwandeln
-data$Kennung<-as.integer(data$Kennung) # nur LVE
+# Stichprobenbeschreibung
+
+**Stichprobe:** `r info$Stichprobe[i]` (fiktive Beispieldaten)
+
+**Anzahl der Lehrveranstaltungen in diesem Bericht (Mindestrücklauf 3 Stimmen):** `r length(unique(daten$Kennung))`
+
+**Anzahl der Stimmen in diesem Bericht:** `r nrow(daten)`
+
+```{r}
+#| label: ruecklauf
+
+abstand()
+cat("## Rücklauf\n\n")
+
+merge_rueck(daten$Teilnehmer, kennung = daten$Kennung)
+```
+
+```{=typst}
+#hinweis[Die Berechnung des Rücklaufs basiert auf der Teilnehmendenzahl, die bei der Anmeldung zur LVE angegeben wurde, und kann deshalb über 100 % liegen.]
 ```
 
 {{< pagebreak >}}
 
-# Allgemeine Angaben und Hinweise
+```{r}
+#| label: fachsemester
+
+# Passt die Abbildung nicht auf eine Seite: fig.height verkleinern (Standard 5)
+# oder mit cutoff alle Fachsemester ab einem Wert zusammenfassen (Standard 12)
+merge_fachsem(daten$FachSemN)
+```
+
+{{< pagebreak >}}
+
+# Veranstaltungsbewertung
+
+```{r}
+#| label: kernfragen
+
+cat("## Kernfragen\n\n")
+
+# Fragetext kürzen, falls nötig:
+# attr(daten$KF_01, "label") <- "Didaktische Hilfsmittel waren hilfreich."
+
+merge_aggr_sk(
+  daten[, c("KF_01", "KF_02", "KF_03")],
+  kennung = daten$Kennung,
+  number  = 6,    # 6-stufige Antwortskala
+  aggr    = TRUE  # erst Mittelwert je Lehrveranstaltung, dann über alle
+)
+```
+
+{{< pagebreak >}}
+
+# Gesamtbewertung
+
+```{r}
+#| label: gesamtnote
+
+merge_grade(daten$Note, kennung = daten$Kennung)
+```
+
+{{< pagebreak >}}
+
+# Rahmenbedingungen
+
+```{r}
+#| label: rahmenbedingungen
+
+merge_sc(daten$V3_D)
+```
+
+```{=typst}
+#hinweis[Bei dieser Frage wurden keine Mittelwerte je Lehrveranstaltung gebildet: n gibt die Anzahl aller Stimmen über alle Lehrveranstaltungen hinweg an.]
+```
+
+```{r}
+#| label: workload
+
+merge_wl(daten$WL, kennung = daten$Kennung)
+```
+
+{{< pagebreak >}}
+
+# Erläuterungen und Hinweise
 
 ## Legende zu Tabellen
 
 ```{r}
-#| label: legende tabelle
-#| fig.height: 2.7
-#| fig.width: 10
-#| fig.align: center
+#| label: legende-tabelle
 
-# Beispiel Tabelle
-bsp.table.stat()
+bsp_table_stat()
 ```
 
--   *"Häufigkeit (n)"* - absolute Häufigkeit, Anzahl
--   *"NA"* - steht für fehlende Werte bzw. keine Angabe
--   *"Prozent (%)"* - prozentuale Häufigkeit, bezieht sich auf alle Werte inkl. NA
--   *"gültige %"* - prozentuale Häufigkeit bei Ausschluss von NA
-
-## Zusätzliche Hinweise
-
--   Die hier präsentierten Angaben sind zumeist **aggregierte Mittelwerte pro LVE** (jede LV geht also mit Ihrem Mittelwert pro Item ein). 'N~courses~' gibt dabei an, wie viele LV-Mittelwerte wiederum jeweils zusammengefasst wurden.
-
--   Bei Fragen, die mit **eckigen Klammertermen beginnen** (z.B. \[F\], \[BSc\], \[MSc\]), handelt es sich um FILTERFRAGEN: je nach vorheriger Angabe also für die Teilnehmer der Online-Umfrage ggf. nicht sichtbar \[kummulierte Prozent deshalb möglicherweise \<100\].
-
--   Manche Fragen wurden im **Multiple-Choice-Format** (Mehrfachnennung möglich \[MC\]) programmiert, können also MEHRFACHANTWORTEN enthalten \[\~ kummulierte Prozent deshalb möglicherweise \>100\].
+```{=typst}
+- #begriff[n] – Anzahl der Antworten bzw. der Lehrveranstaltungen
+- #begriff[NA] – fehlende Werte bzw. keine Angabe
+- #begriff[Prozent (%)] – prozentuale Häufigkeit, bezogen auf alle Werte einschließlich NA
+- #begriff[gültige %] – prozentuale Häufigkeit ohne NA
+```
 
 ## Erläuterung zu Grafiken
 
-Ein **Boxplot** (auch 'Box-Whisker-Plot', dt. Kastengrafik) ist ein Diagramm der Häufigkeitsverteilung, welches verschiedene Streuungs- und Lagemasse graphisch zusammenfasst. Der Boxplot besteht aus einer Box und 2 Linien ('Whisker', dt. Antennen genannt), die diese verlängern; der Strich in der Box repräsentiert den Median der Verteilung.
+Ein **Boxplot** (Kastengrafik) fasst die Verteilung der Antworten zusammen. Er besteht aus einer Box und zwei Linien (Whisker), die sie verlängern; der Strich in der Box zeigt den Median.
 
--   *Box*: Bereich, in dem die mittleren 50% der Daten liegen
--   *Median (MD)*: teilt das gesamte Diagramm in zwei Bereiche, in denen jeweils 50 % der Daten liegen
--   *Min/Max*: Ende des linken/rechten Whiskers (oder entferntester Ausreißer)
-
-**Modus**: häufigste/r Angabe/Wert ~\[nicht in Beispiel-Abbildung!\]~
-
-```{r}
-#| label: Beispiel Boxplot
-#| fig.height: 2.7
-#| fig.width: 10
-#| fig.align: center
-
-bsp.boxplot()
-```
-
-
-```{r}
-#| label: inkl und platzhalter
-#| include: FALSE
-
-#+#################+#
-#### PLATZHALTER ####
-#+#################+#
-
-FB_txt      <- Info$FB.txt[i]
-
-# Falls notwendig einfügen, z.B.:
-# Campus      <- Info$Campus[i] # brauchen wir das noch?
-
-
-```
-
-{{< pagebreak >}}
-
-# Stichprobenbeschreibung 
-
-**Stichprobe/Fachbereich:** `r Info$Stichprobe.txt[i]`
-
-**Zeitraum:** `r Info$Zeitraum[i]`
-
-**Fragebogen:** `r Info$Auswahl[i]`
-
-\
-
-**Anzahl insgesamt erstellter LVE-Umfragen o.g. Zeitraum:** $N_{surveys} = PLATZHALTER$
-
-**Anzahl LVE-Umfragen, die in diesen Bericht eingingen (Mindestrücklauf 3 Stimmen):** $N_{courses} = `r length(unique(data$Kennung))`$
-
-**Anzahl Stimmen, die in diesen Bericht eingingen:** $N_{votes} = `r nrow(data)`$
-
-\
-\
-
-```{r}
-#| label: ruecklauf
-#| fig.height: 2
-#| fig.width: 6
-#| fig.align: center
-#| eval: !expr 'bericht == "LVE"'
-
-cat("## Rücklauf  \n  \n")
-
-boxplot.ruecklauf(data$Teilnehmer, kennung = data$Kennung)
-writeLines("\n")
-
-cat("*HINWEIS: Die Berechnung des Rücklaufs basiert auf den Angaben zur Teilnehmendenzahl \nbei der Anmeldung zur LVE und **kann deshalb >100%** ausfallen!*  \n  \n")
-```
-
-<!-- Brauchen wir sonst noch etwas für die Stichprobenbeschreibung? -->
-
-
-{{< pagebreak >}}
-
-```{r}
-#| label: Datenselektion
-
-# Hier ein Beispiel der LVE:
-
-# Daten kopieren, damit daraus nach dem Bilden der Teilmengen die Labels entnommen werden können 
-data.copy <- data
-
-# Daten des entsprechenden Fachbereichs wählen
-data <- data[which(data$Teilbereich == FB_txt), ] #}
-
- # Bachelordatensatz: Nehme alle, die bei einer der Fragen zu Bachelorabschlüssen etwas angekreut haben
-data.b <- data[which(data$StuAbschl_1 != 0 | 
-                     data$StuAbschl_2 != 0 | 
-                     data$StuAbschl_3 != 0 | 
-                     data$StuAbschl_4 != 0), ]
-
-# Masterdatensatz: Nehme alle, die bei einer der Fragen zu Masterabschlüssen etwas angekreut haben
-data.m <- data[which(data$StuAbschl_5 != 0 | 
-                     data$StuAbschl_6 != 0 | 
-                     data$StuAbschl_7 != 0), ]
-
-
-# Übertrage die Labels
-data <- sjlabelled::copy_labels(data, data.copy)
-# TO-DO: Anders lösen
-
-# Entferne die Kopie
-rm(data.copy)
+```{=typst}
+- #begriff[Box] – Bereich, in dem die mittleren 50 % der Werte liegen
+- #begriff[Median (MD)] – teilt die Werte in zwei gleich große Hälften
+- #begriff[Min/Max] – Ende des linken bzw. rechten Whiskers (oder entferntester Ausreißer)
 ```
 
 ```{r}
-#| label: Fachsem
-#| fig.height: 5
-#| fig.width: 10
-#| fig.align: center
-#| eval: !expr 'bericht == "LVE"'
+#| label: legende-boxplot
 
-# TO-DO: schauen, wie es bei Kohortenbefragungen gelöst wird: Einheitlich machen
-
-# Falls es im Bericht nicht jeweils auf eine Seite passt: "fig.height" oben im Chunk auf "4" stellen 
-# (oder alternativ in den Daten alles über einem bestimmten Fachsemester in "höher als" zusammenfassen)
-
-merge.fachsem(data$FachSemN)
-cat("{{< pagebreak >}} \n  \n")
-
-# merge.fachsem(data.b$FachSemN, cutoff = 12, group = "b")
-# cat("{{< pagebreak >}} \n  \n")
-
-# merge.fachsem(data.m$FachSemN, cutoff = 12, group = "m")
-# cat("{{< pagebreak >}} \n  \n")
-
-# Wirklich Aufschlüsselung nach Abschluss nötig?
-
+bsp_boxplot()
 ```
 
-# Veranstaltungsbewertungen: Kernfragen
+## Zusätzliche Hinweise
 
-```{r}
-#| label: KF
-#| fig.align: center
-
-cat("## Kernfragen: Items mit 6-stufiger Antwortskala  \n  \n")
-
-# Falls man einen Fragetext ändern möchte (z.B. in Abkürzung)
-# Hmisc::label(datensatz$beispiel) <- "" # In die Anführungsstriche neues Label (z.B. Abkürzung einfügen) 
-
-tmp <- data[, c(
-"KF_01",
-"KF_02", 
-"KF_03"
-# "KFz_3_1N",
-# "KF_04",
-# "KFz_4_1N",
-# "KF_05",
-# "KF_06NN",
-# "KFz_8_2N",
-# "KFz_4_4NN",
-# "KFz_4_3N",
-# "KFz_3_2"
-)]
-
-merge.multi.sk(tmp, # Objekt mit den Fragen
-              kennung = data$Kennung, # Spalte aus Daten mit Kennungen
-              number = 6,
-              show.table = TRUE, # Soll eine Tabelle mit angezeigt werden? Default ist TRUE
-              aggr = TRUE) #aggr = FALSE Sind die Daten bereits aggregiert? Default ist FALSE -> alte Funktionsdatei
-
-cat("{{< pagebreak >}}  \n  \n")
-```
-
-```{r}
-#| label: sk5 KF5
-#| fig.align: center
-#| eval: false
-
-cat("## Kernfragen: Items mit 5-stufiger Antwortskala  \n  \n")
-
-merge.multi.sk(data$KF_09Anfo, number = 5, kennung = data$Kennung, aggr = TRUE)
-
-cat(rep("\u200B  \n", 2)) # vertical space
-
-merge.multi.sk(data$KF_10, number = 5, kennung = data$Kennung, aggr = TRUE)
-
-cat("{{< pagebreak >}}  \n  \n")
-```
-
-```{r}
-#| label: grade
-#| fig.align: center
-#| eval: false
-
-cat("# Gesamtbewertung  \n  \n")
-
-# Gesamtnote
-grade(data$GES_Note2, kennung = data$Kennung, show.table = TRUE)
-
-cat("{{< pagebreak >}}  \n  \n")
-```
-
-```{r}
-#| label: wlpres
-#| fig.align: center
-#| fig.height: 3.5
-#| fig.width: 7
-#| eval: false
-
-cat("# Angaben zu Workload und Gruppengröße \n  \n")
-
-merge.multi.sk(data$V3_B, kennung = data$Kennung, aggr = TRUE)
-cat(rep("\u200B  \n", 2)) # vertical space
-merge.multi.sk(data$V3_C, kennung = data$Kennung, aggr = TRUE)
-
-merge.sc(data$V3_D)
-cat("{{< pagebreak >}}  \n  \n")
-merge.sc(data$V3_E)
-cat("{{< pagebreak >}}  \n  \n")
-cat("### Zusätzlich zu Ihren Anwesenheitszeiten in der Veranstaltung: Wie viel Zeit (in Zeitstunden) haben Sie für die vorliegende Veranstaltung im Schnitt pro Woche aufgewendet? (ohne Prüfungsvorbereitung) \n \n")
-merge.wl(ECTS = data$ECTS, WL = data$WL_01, kennung = data$Kennung)
-
-cat(rep("\u200B  \n", 2)) # vertical space
-cat("\n")
-
-cat("### Zusätzlich zu der in vorheriger Frage (oben) angegebenen Zeit: Wie viel Zeit (in Zeitstunden) haben und werden Sie bezogen auf die vorliegende Veranstaltung für die Prüfungsvorbereitung insgesamt aufwenden? \n \n")
-
-merge.wl(ECTS = data$ECTS, WL = data$WL_02, kennung = data$Kennung)
-```
-
-```{r}
-#| label: Lehrpreis
-#| fig.align: center
-#| eval: false
-
-if (Auswahl != "Basis") {
-cat("{{< pagebreak >}}  \n  \n")
-cat("## Lehrpreis  \n  \n")
-
-if (Auswahl == "Psych"){
-  tmp <- data[, c(
-  "LP8_1",
-  "LP8_2",
-  "LP8_3",
-  "LP8_4",
-  "LP8_5"
-  )
-  ]
-}
-merge.multi.sk(tmp, kennung = data$Kennung, number = 6, aggr = TRUE)
-
-cat("{{< pagebreak >}}  \n  \n")
-cat("### Nur für Seminare und Übungen  \n  \n")
-
-if (Auswahl == "Psych"){
-  tmp <- data[, c(
-  "LP8_S1",
-  "LP8_S2",
-  "LP8_S3",
-  "LP8_S4"
-  )
-  ]
-}
-merge.multi.sk(tmp, kennung = data$Kennung, number = 6, aggr = TRUE)
-
-cat("{{< pagebreak >}}  \n  \n")
-}
-```
-
+- Die Angaben sind meist **aggregierte Mittelwerte je Lehrveranstaltung**: Jede Lehrveranstaltung geht mit ihrem Mittelwert ein, n gibt die Anzahl der Lehrveranstaltungen an.
+- Fragen im **Multiple-Choice-Format** (Mehrfachnennung möglich) können mehrere Antworten je Person enthalten; die Prozentwerte können sich deshalb auf über 100 % summieren.

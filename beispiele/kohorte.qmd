@@ -1,0 +1,192 @@
+---
+title: "Studieneingangsbefragung 2025"
+subtitle: "Beispielbericht" # wird pro Bericht durch die Spalte Titel ersetzt
+format: set-template-typst
+
+lfoot: "Studieneingangsbefragung 2025"
+accent_col: "#6ab2e7" # RPTU hellblau
+
+params:
+  i: 1 # Zeile der Berichtstabelle (1 = Master-Bericht mit allen Fragen, 2 bis 6 = einzelne Berichte)
+---
+
+```{r}
+#| label: setup
+#| include: false
+
+library(setanalysis)
+
+# Einstellungen -----------------------------------------------------------
+
+# Beim Rendern kommen params und Akzentfarbe aus dem YAML-Kopf.
+# Wird der Code direkt ausgeführt (z. B. in RStudio), gelten diese Ersatzwerte:
+if (!exists("params")) params <- list(i = 1)
+akzentfarbe <- rmarkdown::metadata$accent_col
+if (is.null(akzentfarbe)) akzentfarbe <- setanalysis_defaults$color.bars
+
+change_analysis_defaults(
+  color.bars    = akzentfarbe,
+  show.plot.sc  = FALSE, # bei Single-Choice-Fragen nur Tabellen
+  show.plot.mc  = FALSE, # bei Multiple-Choice-Fragen nur Tabellen
+  show.plot.sk  = TRUE,  # bei Skalenfragen Tabelle und Abbildung
+  open.appendix = TRUE   # offene Antworten im Anhang sammeln
+)
+
+knitr::opts_chunk$set(fig.align = "center")
+
+
+# Hilfsfunktionen ---------------------------------------------------------
+
+# Zeilen auswählen, ohne die Attribute (Fragetext, Fragetyp, Antwortcodes) zu verlieren
+zeilen_waehlen <- function(daten, auswahl) {
+  neu <- daten[auswahl, , drop = FALSE]
+  for (spalte in names(daten)) {
+    mostattributes(neu[[spalte]]) <- attributes(daten[[spalte]])
+  }
+  neu
+}
+
+# Antwortcodes einer Single-Choice-Frage in Antworttexte übersetzen (z. B. 2 → "Bachelor of Science (B.Sc.)")
+antworttext <- function(x) names(attr(x, "labels"))[match(x, attr(x, "labels"))]
+
+# Seitenumbruch aus einem Chunk heraus; "weak" vermeidet leere Seiten,
+# wenn ein Abschnitt ausgelassen wird und zwei Umbrüche aufeinandertreffen
+seitenumbruch <- function() cat("\n\n```{=typst}\n#pagebreak(weak: true)\n```\n\n")
+
+
+# Welche Fragen kommen in diesen Bericht? ---------------------------------
+
+# Berichtstabelle: eine Zeile pro Bericht (Merkmale wie Abschluss, Studiengang, Titel)
+# Regeltabelle: eine Zeile pro Frage, z. B. inkl.1.3 = Abschluss == "Bachelor of Science (B.Sc.)"
+# input_tabelle() berechnet daraus für jeden Bericht TRUE/FALSE je Frage und Abschnitt.
+berichte <- input_tabelle("../daten/kohorte_berichte.xlsx", "../daten/kohorte_regeln.xlsx")
+bericht <- berichte[params$i, ]
+
+# inkl.1.1, inkl.1.2, …, header1, … als Variablen setzen;
+# merge_*(…, nr = "1.2") fragt dann inkl.1.2 ab, Chunks nutzen eval: !expr header1
+schalter <- grep("^(inkl|header)", names(bericht), value = TRUE)
+list2env(as.list(bericht[schalter]), envir = environment())
+
+
+# Daten -------------------------------------------------------------------
+
+# Zufällig erzeugte Beispieldaten (siehe daten/beispieldaten_erzeugen.R)
+daten <- readRDS("../daten/kohorte.rds")
+
+# Nur Antworten mit Abschluss und Studiengang des Berichts ("alle" = keine Einschränkung)
+if (bericht$Abschluss != "alle") {
+  daten <- zeilen_waehlen(daten, antworttext(daten$abschluss) %in% bericht$Abschluss)
+}
+if (bericht$Studiengang != "alle") {
+  daten <- zeilen_waehlen(daten, antworttext(daten$studiengang) %in% bericht$Studiengang)
+}
+
+# Bei weniger als 10 Stimmen keinen Bericht erstellen
+if (nrow(daten) < 10) knitr::knit_exit()
+```
+
+```{r}
+#| label: titel
+
+# Untertitel pro Bericht aus der Berichtstabelle (überschreibt den Wert im YAML-Kopf)
+cat('\n---\nsubtitle: "', bericht$Titel, '"\n---\n\n', sep = "")
+```
+
+# Angaben zur Befragung
+
+**Bericht:** `r bericht$Titel`
+
+**Befragungszeitraum:** 01.10.2025 bis 15.11.2025 (fiktive Beispieldaten)
+
+**Art der Befragung:** Online-Umfrage
+
+**Anzahl der Stimmen in diesem Bericht:** `r nrow(daten)`
+
+```{=typst}
+#hinweis[Die Zuordnung zu den Berichten ergibt sich aus den Angaben der Teilnehmenden.]
+```
+
+{{< pagebreak >}}
+
+```{r}
+#| label: abschnitt-1
+#| eval: !expr header1
+
+cat("# 1. Studium\n\n")
+
+merge_sc(daten$abschluss, nr = "1.1", digits = 0)
+
+merge_sc(daten$studiengang, nr = "1.2", digits = 0)
+
+merge_num(
+  daten$zugang_note, nr = "1.3",
+  xlab       = "Note der Hochschulzugangsberechtigung",
+  cut.breaks = c(0, 1.4, 1.9, 2.4, 2.9, 3.4, 4),
+  cut.labels = c("1,0 bis 1,4", "1,5 bis 1,9", "2,0 bis 2,4", "2,5 bis 2,9", "3,0 bis 3,4", "3,5 bis 4,0")
+)
+
+seitenumbruch()
+```
+
+```{r}
+#| label: abschnitt-2
+#| eval: !expr header2
+
+cat("# 2. Information vor Studienbeginn\n\n")
+
+merge_mc(daten[, paste0("info_", 1:5)], nr = "2.1", digits = 0)
+
+merge_sk(daten$info_ausr, nr = "2.2", alt1 = "kann ich nicht beurteilen", alt1.num = 0)
+
+seitenumbruch()
+```
+
+```{r}
+#| label: abschnitt-3
+#| eval: !expr header3
+
+cat("# 3. Anmerkungen\n\n")
+
+merge_open(daten$offen, nr = "3.1") # Überschrift und Link hier, Antworten im Anhang
+
+seitenumbruch()
+```
+
+```{r}
+#| label: anhang
+
+# Gibt die gesammelten offenen Antworten aus und leert danach den Speicher.
+# Gehört ans Ende jedes Berichts, auch wenn er keine offenen Fragen enthält.
+appendix_open()
+seitenumbruch()
+```
+
+# Erläuterungen und Hinweise
+
+## Legende zu Tabellen
+
+```{r}
+#| label: legende-tabelle
+
+bsp_table_stat()
+```
+
+```{=typst}
+- #begriff[n] – Anzahl der Antworten
+- #begriff[NA] – fehlende Werte bzw. keine Angabe
+- #begriff[Prozent (%)] – prozentuale Häufigkeit, bezogen auf alle Werte einschließlich NA
+- #begriff[gültige %] – prozentuale Häufigkeit ohne NA
+```
+
+## Erläuterung zu Grafiken
+
+```{r}
+#| label: legende-grafik
+
+bsp_evasys_sk6()
+```
+
+## Zusätzliche Hinweise
+
+- Fragen, die mit einem **Begriff in eckigen Klammern** beginnen (z. B. \[BACHELOR\]), sind Filterfragen: Sie wurden nur einem Teil der Teilnehmenden angezeigt.
+- Fragen im **Multiple-Choice-Format** (Mehrfachnennung möglich) können mehrere Antworten je Person enthalten; die gültigen Prozentwerte können sich deshalb auf über 100 % summieren.

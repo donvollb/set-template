@@ -1,6 +1,17 @@
-figure/
-template_files/
-template.tex
-template.log
 # Interne Notizen und Arbeitsdateien (nicht veröffentlichen)
 notes/
+
+# Quarto
+/.quarto/
+
+# Render-Ausgaben (Beispiel-PDFs liegen in vorschau/)
+*.pdf
+!vorschau/*.pdf
+*.typ
+!_extensions/**/*.typ
+*_files/
+
+# R
+.Rhistory
+.RData
+.Rproj.user/

@@ -1,0 +1,7 @@
+# Nicht kopieren bei `quarto use template donvollb/set-template`
+vorschau/
+notes/
+**/*.pdf
+**/*.typ
+**/*_files/
+README.en.md

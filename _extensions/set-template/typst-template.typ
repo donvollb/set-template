@@ -1,201 +1,114 @@
-
-// This is an example typst template (based on the default template that ships
-// with Quarto). It defines a typst function named 'article' which provides
-// various customization options. This function is called from the 
-// 'typst-show.typ' file (which maps Pandoc metadata function arguments)
+// set-template: Typst-Vorlage für Evaluationsberichte
 //
-// If you are creating or packaging a custom typst template you will likely
-// want to replace this file and 'typst-show.typ' entirely. You can find 
-// documentation on creating typst templates and some examples here: 
-//   - https://typst.app/docs/tutorial/making-a-template/
-//   - https://github.com/typst/templates
+// Quarto fügt diese Datei vor dem Bericht ein; typst-show.typ ruft danach `bericht()` auf.
+// Platzhalter wie $$accent_col$$ füllt Quarto aus dem YAML-Kopf des Dokuments bzw. aus _extension.yml.
 
-// Paket für die Richtige Ausrichtung der Zahlen in Tabellen importieren
-// Komentar zur Demonstration
-#set outline(indent: n => n * 1em)
-#show outline.entry: it => {
-  v(1.5em, weak: true)  // Vertikaler Abstand
-  it
-}
 
-#let accent_col_raw = str("$accent_col$")
-#let accent_col = accent_col_raw.replace("\\", "")
-#let svg = read("_extensions\set-template\images\Logo Meze - Cobranding.svg")
-#let recolored = svg.replace("#006a6a", accent_col)
+// Akzentfarbe ------------------------------------------------------------------
 
-#let article(
+// Quarto maskiert "#" als "\#", daher den Backslash entfernen
+#let akzent = rgb("$accent_col$".replace("\\", ""))
+
+// Farbe im Logo, die durch die Akzentfarbe ersetzt wird
+#let logo-farbe = "#006a6a"
+
+
+// Hilfsfunktionen für den Berichtstext -----------------------------------------
+
+// Hervorgehobener Begriff, z. B. in Legenden: #begriff[Median]
+#let begriff(body) = text(fill: akzent, weight: "semibold", body)
+
+// Kleiner Hinweistext unter Abbildungen oder Tabellen: #hinweis[...]
+#let hinweis(body) = block(above: 1.5em, below: 2em, text(size: 0.9em, style: "italic", body))
+
+
+// Seitenlayout -----------------------------------------------------------------
+
+#let bericht(
   title: none,
   subtitle: none,
-  authors: none,
   date: none,
-  abstract: none,
-  abstract-title: none,
-  cols: 1,
-  margin: (left: 2cm, right: 2cm, top: 4cm, bottom: 2cm),
-  paper: "a4",
+  fusszeile: none,
+  logo: none,
   lang: "de",
-  region: "DE",
-  font: "Red Hat Text",
+  margin: (x: 2cm, top: 3cm, bottom: 2cm),
+  paper: "a4",
+  font: ("Red Hat Text",),
   fontsize: 10pt,
-  title-size: 1.5em,
-  subtitle-size: 1.25em,
-  heading-family: "Red Hat Text",
-  heading-weight: "regular",
-  heading-style: "normal",
-  heading-color: black,
-  heading-line-height: 0.65em,
-  sectionnumbering: none,
-  pagenumbering: "Seite 1",
-  toc: false,
-  toc_title: none,
-  toc_depth: none,
-  toc_indent: 1.5em,
+  toc: true,
+  toc-title: none,
+  toc-depth: 1,
   doc,
 ) = {
+  // Logo einlesen und in der Akzentfarbe einfärben
+  let kopf-logo = if logo != none {
+    image(bytes(read(logo).replace(logo-farbe, akzent.to-hex())), height: 1.3cm)
+  }
+
   set page(
     paper: paper,
     margin: margin,
-    numbering: pagenumbering,
-    //Kopfzeile
     header: stack(
-    spacing: 8pt,
-    grid(
-      columns: (1fr, 1fr),
-      align: (left, right),
-      image("_extensions/set-template/images/leer.svg", height:  1.3cm),
-      image(bytes(recolored), height:  1.3cm)
-  //  image(svg, height:  1.3cm)
-      ),
-    line(length: 100%, stroke: rgb(accent_col)),
-  ),
-      footer: stack(
-    spacing: 4pt,
-    line(length: 100%, stroke: rgb(accent_col)),
-    context {
-      // Text links, Seitenzahl rechts
-      "$lfoot$" + h(1fr) + "Seite " + counter(page).display()
-    }
+      spacing: 8pt,
+      align(right, kopf-logo),
+      line(length: 100%, stroke: akzent),
+    ),
+    footer: stack(
+      spacing: 6pt,
+      line(length: 100%, stroke: akzent),
+      context text(fill: luma(90))[#fusszeile #h(1fr) Seite #counter(page).display()],
+    ),
   )
-  )
+
+  set text(lang: lang, font: font, size: fontsize, features: ("tnum",)) // gleich breite Ziffern
   set par(justify: true)
-  set text(lang: lang,
-           region: region,
-           font: font,
-           size: fontsize)
-  set heading(numbering: sectionnumbering)
+
+  // Überschriften: mit Abstand; nie allein am Seitenende
+  show heading: set block(below: 2em)
+  show heading: it => {
+    block(breakable: false, it + v(6em))
+    v(-6em)
+  }
+
+  // Links und Verweise in der Akzentfarbe
+  show link: set text(fill: akzent)
+
+  // Hervorhebungen (_..._) erscheinen fett, z. B. die Skalenangabe in Tabellenköpfen
+  show emph: it => text(weight: "bold", it.body)
+
+  // Tabellen: zentriert, ohne Linien, ohne Silbentrennung
+  set table(inset: (x: 6pt, y: 7pt), stroke: none)
+  show table: set text(hyphenate: false)
+  show table: it => block(below: 2em, align(center, it))
+
+  // tinytable packt Tabellen in eine nicht umbrechbare Abbildung; lange Tabellen
+  // (z. B. offene Antworten) liefen dann über das Seitenende. Daher nur den umbrechbaren Inhalt ausgeben.
+  show figure.where(kind: table): it => {
+    set block(breakable: true)
+    it.body
+  }
+
+  // Titel
   if title != none {
-    align(center)[#block(inset: 2em)[
-      #set par(leading: heading-line-height)
-      #if (heading-family != none or heading-weight != "bold" or heading-style != "normal"
-           or heading-color != black or heading-decoration == "underline"
-           or heading-background-color != none) {
-        set text(font: heading-family, weight: heading-weight, style: heading-style, fill: heading-color)
-        text(size: title-size)[#title]
-        if subtitle != none {
-          parbreak()
-          text(size: subtitle-size)[#subtitle]
-        }
-      } else {
-        text(weight: "bold", size: title-size)[#title]
-        if subtitle != none {
-          parbreak()
-          text(weight: "bold", size: subtitle-size)[#subtitle]
-        }
+    align(center, block(inset: 2em)[
+      #text(size: 1.5em, weight: "bold", title)
+      #if subtitle != none {
+        parbreak()
+        text(size: 1.25em, subtitle)
       }
-    ]]
+      #if date != none {
+        parbreak()
+        date
+      }
+    ])
   }
 
-  if authors != none {
-    let count = authors.len()
-    let ncols = calc.min(count, 3)
-    grid(
-      columns: (1fr,) * ncols,
-      row-gutter: 1.5em,
-      ..authors.map(author =>
-          align(center)[
-            #author.name \
-            #author.affiliation \
-            #author.email
-          ]
-      )
-    )
-  }
-
-  if date != none {
-    align(center)[#block(inset: 1em)[
-      #date
-    ]]
-  }
-
-  if abstract != none {
-    block(inset: 2em)[
-    #text(weight: "semibold")[#abstract-title] #h(1em) #abstract
-    ]
-  }
-
+  // Inhaltsverzeichnis, danach beginnt der Bericht auf einer neuen Seite
   if toc {
-    let title = toc_title
-    block(above: 3em, below: 3em)[
-    #outline(
-      title: toc_title,
-      depth: toc_depth,
-      indent: toc_indent
-    );
-    ]
+    show outline.entry: it => v(1.5em, weak: true) + it
+    block(above: 3em, outline(title: toc-title, depth: toc-depth, indent: 1.5em))
+    pagebreak()
   }
 
-  if cols == 1 {
-    doc
-  } else {
-    columns(cols, doc)
-  }
+  doc
 }
-
-// Tabellen Zentrieren und Abstände einstellen
-
-#show table: it => align(center, block(width: 100%, it))
-
-#show table: set text(hyphenate: false)
-// #show table.cell.where(y: 0): set text(hyphenate: false)
-
-
-#show emph: it => {
-  text(weight: "bold", it.body)
-}
-
-#set table(inset: 6pt,
-           stroke: none)
-
-// Tabellenziffern (also gleich breite Ziffern) aktivieren
-
-#set text(
-  features: ("tnum",)
-)
-
-// Hyperlinks einfärben
-
-#show link: set text(fill: rgb(accent_col))
-
-
-// Abstände unter Überschriften und Tabellen anpassen
-
-#show heading: set block(below: 2em)
-#show table: it => {
-  block(
-    below: 2em
-  )[
-    #it
-    #h(0pt)  // unsichtbarer Blocker
-  ]
-}
-
-// Eigene Überschrift, die unten Platz für Text reserviert
-#let custom-heading(it, reserve: 6em) = {
-  block(breakable: false, it + v(reserve))
-  v(-1 * reserve)
-}
-
-// Für alle Überschriften benutzen:
-#show heading: custom-heading
-
-#set table(row-gutter: 20pt, stroke: none)
