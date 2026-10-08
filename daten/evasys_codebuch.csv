@@ -1,0 +1,76 @@
+Variable:;"""abschluss"""
+Fragetyp:;"1 aus n"
+Fragetext:;"""1.1 Welchen Studienabschluss streben Sie an?"""
+Wert:;"<leer>: Ungültig / Keine Antwort"
+" ";"""1 : Bachelor of Arts (B.A.)"""
+" ";"""2 : Bachelor of Science (B.Sc.)"""
+" ";"""3 : Master of Arts (M.A.)"""
+" ";"""4 : Master of Science (M.Sc.)"""
+------------
+Variable:;"""studiengang"""
+Fragetyp:;"1 aus n"
+Fragetext:;"""1.2 In welchem Studiengang sind Sie eingeschrieben?"""
+Wert:;"<leer>: Ungültig / Keine Antwort"
+" ";"""1 : Musterwissenschaft"""
+" ";"""2 : Beispielkunde"""
+" ";"""3 : Platzhalterlehre"""
+" ";"""4 : Angewandte Testologie"""
+------------
+Variable:;"""zugang_note"""
+Zeichenlimit:;1500
+Fragetyp:;"Offene Frage"
+Fragetext:;"""1.3 [BACHELOR] Welche Durchschnittsnote hatte Ihr Zeugnis der Hochschulzugangsberechtigung?"""
+Wert:;"Antworttext / Platzhalter"
+------------
+Variable:;"""info"""
+Fragetyp:;"n aus m"
+Fragetext:;"""2.1 Wie haben Sie sich vor Studienbeginn informiert? (Mehrfachnennung möglich)"""
+------------
+Variable:;"""info"""
+Fragetyp:;"n aus m"
+Fragetext:;"""'2.1 Wie haben Sie sich vor Studienbeginn informiert? (Mehrfachnennung möglich)' : Website der Hochschule"""
+Werte:;"0 : nicht angekreuzt"
+" ";"""1"": angekreuzt"
+------------
+Variable:;"""info"""
+Fragetyp:;"n aus m"
+Fragetext:;"""'2.1 Wie haben Sie sich vor Studienbeginn informiert? (Mehrfachnennung möglich)' : Informationstag"""
+Werte:;"0 : nicht angekreuzt"
+" ";"""2"": angekreuzt"
+------------
+Variable:;"""info"""
+Fragetyp:;"n aus m"
+Fragetext:;"""'2.1 Wie haben Sie sich vor Studienbeginn informiert? (Mehrfachnennung möglich)' : Freunde und Familie"""
+Werte:;"0 : nicht angekreuzt"
+" ";"""3"": angekreuzt"
+------------
+Variable:;"""info"""
+Fragetyp:;"n aus m"
+Fragetext:;"""'2.1 Wie haben Sie sich vor Studienbeginn informiert? (Mehrfachnennung möglich)' : Soziale Medien"""
+Werte:;"0 : nicht angekreuzt"
+" ";"""4"": angekreuzt"
+------------
+Variable:;"""info"""
+Fragetyp:;"n aus m"
+Fragetext:;"""'2.1 Wie haben Sie sich vor Studienbeginn informiert? (Mehrfachnennung möglich)' : Sonstiges"""
+Werte:;"0 : nicht angekreuzt"
+" ";"""5"": angekreuzt"
+------------
+Variable:;"""info_ausr"""
+Fragetyp:;Skalafrage
+Fragetext:;"""2.2 Vor Beginn meines Studiums war ich ausreichend über den Studiengang informiert."""
+Werte:;"<leer>: Ungültig / Keine Antwort"
+" ";"""1 : stimme gar nicht zu"""
+" ";"""2 : stimme nicht zu"""
+" ";"""3 : stimme eher nicht zu"""
+" ";"""4 : stimme eher zu"""
+" ";"""5 : stimme zu"""
+" ";"""6 : stimme voll zu"""
+" ";"""0 : kann ich nicht beurteilen"""
+------------
+Variable:;"""offen"""
+Zeichenlimit:;1500
+Fragetyp:;"Offene Frage"
+Fragetext:;"""3.1 Welche weiteren Informationen hätten Sie sich vor Studienbeginn gewünscht?"""
+Wert:;"Antworttext / Platzhalter"
+------------

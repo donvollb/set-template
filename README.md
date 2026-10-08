@@ -22,6 +22,9 @@ das Layout (Typst) und zwei lauffähige Beispielberichte mit zufällig erzeugten
   legt fest, welche Fragen in welchem Bericht erscheinen
 - **Lange Tabellen brechen sauber um** (Tabellenkopf wird wiederholt), Überschriften rutschen mit dem folgenden Inhalt auf die nächste Seite
 - **Offene Antworten im Anhang** mit Links hin und zurück
+- **Kompletter Ablauf als Beispiel:** evasys-Export einlesen, Berichte festlegen, alle Berichte erstellen,
+  protokollieren und verteilen
+- **Schrift wird mitgeliefert** (Red Hat Text), keine Installation nötig
 
 ## Voraussetzungen
 
@@ -33,10 +36,11 @@ das Layout (Typst) und zwei lauffähige Beispielberichte mit zufällig erzeugten
   pak::pak("donvollb/setanalysis@dev")
   ```
 
-- Schriftart **Red Hat Text** ([Google Fonts](https://fonts.google.com/specimen/Red+Hat+Text)).
-  setanalysis bringt die Schrift für die Grafiken selbst mit; für den Text im PDF muss sie installiert sein.
-  Am besten die Dateien aus dem Unterordner *static* installieren. Unter Windows ggf.
-  *Für alle Benutzer installieren* wählen (alle *.ttf* markieren → Rechtsklick), damit Typst sie findet.
+- Für die Skripte zum Kohorten-Beispiel zusätzlich die R-Pakete quarto (Rendern) und writexl
+  (nur zum Neuerzeugen der Beispieldaten).
+
+Die Schrift **Red Hat Text** bringt die Extension selbst mit (`_extensions/set-template/fonts/`), für die
+Grafiken registriert setanalysis sie beim Laden. Sie muss also nicht installiert sein.
 
 ## Installation
 
@@ -61,16 +65,22 @@ quarto render template.qmd -P i:3    # Bericht 3
 quarto render                        # alle Beispiele
 ```
 
-Alle Berichte einer Befragung auf einmal erstellen (benötigt zusätzlich das R-Paket quarto):
+Alle Berichte einer Befragung in zwei Schritten erstellen:
 
 ```bash
-Rscript beispiele/alle-berichte-rendern.R
+Rscript beispiele/vorbereitung.R           # 1. Daten und Berichtstabelle vorbereiten
+Rscript beispiele/alle-berichte-rendern.R  # 2. alle Berichte erstellen, protokollieren, verteilen
 ```
 
-Das Skript rendert `beispiele/kohorte.qmd` für jede Zeile der Berichtstabelle, macht bei Fehlern mit dem
-nächsten Bericht weiter, verwirft Berichte mit weniger als 10 Stimmen, schreibt ein Protokoll
-(`berichte/protokoll.csv`: Bericht, Stimmen, Status) und kopiert die PDFs in die Ordner aus der Spalte
-`Ordner` der Berichtstabelle.
+1. `vorbereitung.R` liest den evasys-Export (Rohdaten und Codebuch) mit `evasys_read_data()` ein, wertet
+   Berichts- und Regeltabelle mit `input_tabelle()` aus, ergänzt Titel und Dateinamen, prüft die
+   Schreibweisen mit `label_test()` und speichert alles in `daten/`.
+2. `alle-berichte-rendern.R` rendert `beispiele/kohorte.qmd` für jede Zeile der Berichtstabelle, macht bei
+   Fehlern mit dem nächsten Bericht weiter, verwirft Berichte mit weniger als 10 Stimmen, schreibt ein
+   Protokoll (`berichte/protokoll.csv`: Bericht, Stimmen, Status) und kopiert die PDFs in die Ordner aus
+   der Spalte `Ordner` der Berichtstabelle.
+
+Die Ergebnisse von Schritt 1 liegen bei, die Beispiele lassen sich also auch direkt rendern.
 
 Gerenderte Beispiele: [LVE-Bericht](vorschau/lve-bericht.pdf) ·
 [Kohorte: Master-Bericht](vorschau/kohorte-master.pdf) ·
@@ -84,13 +94,19 @@ Gerenderte Beispiele: [LVE-Bericht](vorschau/lve-bericht.pdf) ·
 │   ├── typst-template.typ      Layout: Kopf- und Fußzeile, Titel, Tabellen, Überschriften
 │   ├── typst-show.typ          übergibt die Angaben aus dem YAML-Kopf an das Layout
 │   ├── chunk-ausgabe.lua       erlaubt Seitenumbrüche in R-Chunks
+│   ├── fonts/                  Red Hat Text mit Lizenz (SIL Open Font License)
 │   └── images/                 Logos
 ├── template.qmd                Beispiel 1: LVE-Bericht pro Fachbereich
 ├── beispiele/
-│   ├── kohorte.qmd             Beispiel 2: mehrere Berichte über Berichts- und Regeltabelle
-│   └── alle-berichte-rendern.R erstellt, protokolliert und verteilt alle Berichte von Beispiel 2
-├── daten/                      fiktive Beispieldaten, Berichts- und Regeltabelle
-│   └── beispieldaten_erzeugen.R  erzeugt die Daten (zufällig, reproduzierbar)
+│   ├── vorbereitung.R          Beispiel 2, Schritt 1: evasys-Export einlesen, Berichte festlegen
+│   ├── alle-berichte-rendern.R Beispiel 2, Schritt 2: alle Berichte erstellen, protokollieren, verteilen
+│   └── kohorte.qmd             Beispiel 2: Bericht mit unterschiedlichem Inhalt je Berichtstabellen-Zeile
+├── daten/                      fiktive Beispieldaten
+│   ├── beispieldaten_erzeugen.R  erzeugt die Daten (zufällig, reproduzierbar)
+│   ├── lve.rds, lve_info.csv     Beispiel 1: Daten und Info-Tabelle
+│   ├── evasys_*.csv              Beispiel 2: Export im Format von evasys (Rohdaten, Codebuch)
+│   ├── kohorte_*.xlsx            Beispiel 2: Berichts- und Regeltabelle
+│   └── kohorte*.rds              Beispiel 2: Ergebnis von vorbereitung.R
 └── vorschau/                   gerenderte Beispiel-PDFs und Vorschaubilder
 ```
 
@@ -107,18 +123,20 @@ Für Befragungen, bei denen jeder Bericht (z. B. pro Studiengang) andere Fragen 
 1. Die **Berichtstabelle** enthält eine Zeile pro Bericht (Code, Abschluss, Studiengang, Titel …).
 2. Die **Regeltabelle** legt pro Frage fest, wann sie erscheint, z. B. `inkl.1.3` →
    `Abschluss == "Bachelor of Science (B.Sc.)"`.
-3. `input_tabelle()` berechnet daraus `TRUE`/`FALSE` je Bericht und Frage. Die Vorlage setzt die
-   Werte als Variablen; `merge_sc(…, nr = "1.3")` fragt dann `inkl.1.3` ab, ganze Abschnitte werden
-   über `eval: !expr header1` ein- oder ausgeblendet.
+3. `input_tabelle()` berechnet daraus `TRUE`/`FALSE` je Bericht und Frage (in `vorbereitung.R`). Der
+   Bericht setzt die Werte als Variablen; `merge_sc(…, nr = "1.3")` fragt dann `inkl.1.3` ab, ganze
+   Abschnitte werden über `eval: !expr header1` ein- oder ausgeblendet.
 
 Die beiden Tabellen liegen als `daten/kohorte_berichte.xlsx` und `daten/kohorte_regeln.xlsx` bei.
 
 ### Beispieldaten
 
 Alle Daten in `daten/` sind zufällig erzeugt; Fachbereiche und Studiengänge sind erfunden, offene
-Antworten bestehen aus Lorem ipsum. Die Variablen haben dieselben Attribute wie Daten aus
-`evasys_read_data()` (Fragetext, Fragenummer, Fragetyp, Antwortcodes). Neu erzeugen lassen sie sich mit
-`Rscript beispieldaten_erzeugen.R` im Ordner `daten/` (benötigt zusätzlich das Paket writexl).
+Antworten bestehen aus Lorem ipsum. Das Kohorten-Beispiel liegt als Export im Format von evasys vor
+(Rohdaten und Codebuch, inklusive typischer Platzhalter wie `[Freitextfeld]`), das LVE-Beispiel direkt
+als R-Datei mit denselben Attributen, die `evasys_read_data()` erzeugt (Fragetext, Fragenummer,
+Fragetyp, Antwortcodes). Neu erzeugen lassen sich die Daten mit `Rscript beispieldaten_erzeugen.R` im
+Ordner `daten/`, danach `beispiele/vorbereitung.R` ausführen.
 
 ![Vorschau des Kohorten-Beispiels](vorschau/kohorte.png)
 
@@ -161,5 +179,7 @@ RPTU-Farben für `accent_col`:
 ## Lizenz
 
 **Code:** [MIT License](LICENSE)
+
+**Schrift:** Red Hat Text, © The Red Hat Project Authors, [SIL Open Font License 1.1](_extensions/set-template/fonts/OFL.txt)
 
 **Logos:** Eigentum der [RPTU (Rheinland-Pfälzische Technische Universität Kaiserslautern-Landau)](https://rptu.de)

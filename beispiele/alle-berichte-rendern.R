@@ -1,5 +1,5 @@
 # Erstellt alle Berichte des Kohorten-Beispiels nacheinander, protokolliert die Anzahl der Stimmen
-# und verteilt die PDFs in Ordner.
+# und verteilt die PDFs in Ordner (Schritt 2 von 2; Schritt 1: vorbereitung.R).
 #
 # Ausführen im Hauptordner des Projekts:  Rscript beispiele/alle-berichte-rendern.R
 # (oder in RStudio mit dem Projektordner als Arbeitsverzeichnis)
@@ -11,13 +11,10 @@
 #   3. Protokoll: Bericht, Stimmen, Status und Zeitpunkt als CSV
 #   4. Verteilen: Kopie jedes Berichts in die Ordner aus der Spalte "Ordner" der Berichtstabelle
 
-library(setanalysis)
-
-
 # Einstellungen -----------------------------------------------------------
 
 vorlage  <- "beispiele/kohorte.qmd"
-berichte <- input_tabelle("daten/kohorte_berichte.xlsx", "daten/kohorte_regeln.xlsx")
+berichte <- readRDS("daten/kohorte_berichte.rds") # aus vorbereitung.R
 auswahl  <- seq_len(nrow(berichte)) # oder z. B. c(3, 5), um nur einzelne Berichte neu zu erstellen
 ausgabe  <- "berichte"              # Ordner für PDFs und Protokoll
 verteilt <- file.path(ausgabe, "verteilt") # in der Praxis z. B. ein Netzlaufwerk oder Cloud-Ordner
@@ -33,7 +30,7 @@ unlink(protokoll_datei)
 status <- setNames(rep("nicht erstellt", nrow(berichte)), berichte$Code)
 
 for (i in auswahl) {
-  datei <- paste0(berichte$Code[i], ".pdf")
+  datei <- paste0(berichte$Dateiname[i], ".pdf")
   message("Bericht ", i, "/", nrow(berichte), ": ", berichte$Code[i])
 
   # Bei einem Fehler mit dem nächsten Bericht weitermachen und den Fehler protokollieren
@@ -62,13 +59,14 @@ stimmen <- if (file.exists(protokoll_datei)) read.csv2(protokoll_datei) else dat
 protokoll <- data.frame(
   Code      = berichte$Code,
   Titel     = berichte$Titel,
+  Datei     = paste0(berichte$Dateiname, ".pdf"),
   N         = stimmen$N[match(berichte$Code, stimmen$Code)],
   Status    = unname(status),
   Zeitpunkt = format(Sys.time(), "%Y-%m-%d %H:%M")
 )
 
 zu_wenig <- protokoll$Status == "erstellt" & !is.na(protokoll$N) & protokoll$N < min_n
-unlink(file.path(ausgabe, paste0(protokoll$Code[zu_wenig], ".pdf")))
+unlink(file.path(ausgabe, protokoll$Datei[zu_wenig]))
 protokoll$Status[zu_wenig] <- paste("übersprungen: weniger als", min_n, "Stimmen")
 
 write.csv2(protokoll, file.path(ausgabe, "protokoll.csv"), row.names = FALSE, fileEncoding = "UTF-8")
@@ -85,7 +83,7 @@ for (i in which(protokoll$Status == "erstellt")) {
 
   for (ordner in file.path(verteilt, strsplit(ziele, " | ", fixed = TRUE)[[1]])) {
     dir.create(ordner, recursive = TRUE, showWarnings = FALSE)
-    file.copy(file.path(ausgabe, paste0(protokoll$Code[i], ".pdf")), ordner, overwrite = TRUE)
+    file.copy(file.path(ausgabe, protokoll$Datei[i]), ordner, overwrite = TRUE)
   }
 }
 

@@ -21,10 +21,16 @@ Grundlegende Überarbeitung: Die Vorlage nutzt jetzt Typst statt LaTeX und die a
 - Typst-Hilfsfunktionen `#begriff[…]` und `#hinweis[…]` für Legenden und Hinweistexte.
 - Zweites Beispiel `beispiele/kohorte.qmd`: mehrere Berichte mit unterschiedlichem Inhalt über Berichts- und
   Regeltabelle (`input_tabelle()`), offene Antworten im Anhang.
+- Die Schrift Red Hat Text wird mitgeliefert (`_extensions/set-template/fonts/`, SIL Open Font License) und
+  über `font-paths` eingebunden; sie muss nicht mehr installiert sein.
+- Skript `beispiele/vorbereitung.R`: liest einen evasys-Export mit `evasys_read_data()` ein, wertet Berichts-
+  und Regeltabelle mit `input_tabelle()` aus, ergänzt Titel und Dateinamen und prüft Schreibweisen mit
+  `label_test()`. Der Kohorten-Bericht liest die vorbereiteten Dateien.
 - Skript `beispiele/alle-berichte-rendern.R`: erstellt alle Berichte einer Befragung nacheinander, macht bei
   Fehlern weiter, verwirft Berichte mit zu wenigen Stimmen, schreibt ein Protokoll und verteilt die PDFs in
   Ordner (Spalte `Ordner` der Berichtstabelle).
-- Eigene, zufällig erzeugte Beispieldaten in `daten/` (mit Skript zum Erzeugen).
+- Eigene, zufällig erzeugte Beispieldaten in `daten/` (mit Skript zum Erzeugen), für das Kohorten-Beispiel
+  als Export im Format von evasys.
 - Untertitel pro Bericht aus den Daten.
 - Zweisprachige README (deutsch/englisch) mit Vorschaubildern und Beispiel-PDFs in `vorschau/`.
 

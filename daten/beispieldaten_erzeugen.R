@@ -2,8 +2,12 @@
 #
 # Alle Werte sind zufällig erzeugt (fester Seed, daher reproduzierbar); Fachbereiche und
 # Studiengänge sind erfunden, offene Antworten bestehen aus Lorem ipsum.
-# Die Variablen haben dieselben Attribute wie Daten aus evasys_read_data():
-# label (Fragetext), nr (Fragenummer), type (Fragetyp) und labels (Antwortcodes).
+#
+# - LVE-Beispiel: lve.rds und lve_info.csv, direkt mit den Attributen, die evasys_read_data()
+#   erzeugt: label (Fragetext), nr (Fragenummer), type (Fragetyp) und labels (Antwortcodes)
+# - Kohorten-Beispiel: ein Export im Format von evasys (evasys_rohdaten.csv, evasys_codebuch.csv)
+#   sowie Berichts- und Regeltabelle; daraus erzeugt beispiele/vorbereitung.R die Dateien,
+#   die der Bericht liest
 #
 # Ausführen im Ordner daten/:  Rscript beispieldaten_erzeugen.R
 
@@ -176,6 +180,7 @@ offen <- rep(NA_character_, n)
 antwortende <- sample(n, 25)
 offen[antwortende] <- replicate(length(antwortende), lorem_antwort())
 offen[antwortende[1:4]] <- "Lorem ipsum dolor sit amet." # mehrfach gegebene Antwort
+offen[setdiff(seq_len(n), antwortende)[1:3]] <- c("-", ".", "[Freitextfeld]") # Platzhalter wie in evasys
 kohorte$offen <- frage(
   offen,
   label = "Welche weiteren Informationen hätten Sie sich vor Studienbeginn gewünscht?",
@@ -191,8 +196,9 @@ berichte <- data.frame(
   Art         = c("alles.master", "alles", "Studiengang", "Studiengang", "Studiengang", "speziell"),
   Abschluss   = c("alle", "alle", abschluesse[c(2, 4, 1)], "alle"),
   Studiengang = c("alle", "alle", "Musterwissenschaft", "Musterwissenschaft", "Beispielkunde", "alle"),
-  Titel       = paste("Befragung 2025:", c("Master-Bericht (alle Fragen)", "Gesamtbericht", "B.Sc. Musterwissenschaft",
-                                           "M.Sc. Musterwissenschaft", "B.A. Beispielkunde", "Sonderauswertung")),
+  # vorbereitung.R stellt "Befragung 2025:" voran
+  Titel       = c("Master-Bericht (alle Fragen)", "Gesamtbericht", "B.Sc. Musterwissenschaft",
+                  "M.Sc. Musterwissenschaft", "B.A. Beispielkunde", "Sonderauswertung"),
   # Wohin alle-berichte-rendern.R den Bericht kopiert (mehrere mit " | ", leer = nicht verteilen)
   Ordner      = c("", "Gesamtberichte | Musterwissenschaft | Beispielkunde", "Musterwissenschaft",
                   "Musterwissenschaft", "Beispielkunde", "")
@@ -216,10 +222,65 @@ regeln <- data.frame(
 names(regeln)[2] <- "TRUE (in einen Bericht rein), wenn…"
 
 
+# Kohorte als evasys-Export schreiben -------------------------------------
+
+# Rohdaten und Codebuch wie bei evasys: Latin-1, Semikolon, Texte im Codebuch in dreifachen
+# Anführungszeichen, ein Abschnitt pro Variable (bei MC-Fragen zusätzlich einer pro Antwortoption)
+evasys_export <- function(daten, rohdaten_datei, codebuch_datei, filter = character()) {
+  zitat <- function(x) paste0('"""', x, '"""')
+  csv_wert <- function(x) {
+    if (is.character(x)) ifelse(is.na(x), '""', paste0('"', gsub('"', '""', x), '"'))
+    else ifelse(is.na(x), "", sub(".", ",", as.character(x), fixed = TRUE)) # Dezimalkomma
+  }
+
+  kopf <- ifelse(names(daten) %in% filter, paste("[FILTER]", names(daten)), names(daten))
+  rohdaten <- c(paste0('"', kopf, '"', collapse = ";"),
+                do.call(paste, c(lapply(daten, csv_wert), sep = ";")))
+
+  trenner <- "------------"
+  codebuch <- character()
+  basis <- sub("_[0-9]+$", "", names(daten)) # MC-Spalten frage_1, frage_2 … gehören zu "frage"
+
+  for (variable in unique(basis)) {
+    spalten <- names(daten)[basis == variable]
+    x <- daten[[spalten[1]]]
+    nr <- attr(x, "nr")
+    typ <- attr(x, "type")
+    abschnitt <- paste0("Variable:;", zitat(variable))
+
+    if (typ == "mc") {
+      frage <- sub(" : [^:]*$", "", attr(x, "label"))
+      codebuch <- c(codebuch, abschnitt, 'Fragetyp:;"n aus m"',
+                    paste0("Fragetext:;", zitat(paste(nr, frage))), trenner)
+      for (k in seq_along(spalten)) {
+        option <- sub("^.* : ", "", attr(daten[[spalten[k]]], "label"))
+        codebuch <- c(codebuch, abschnitt, 'Fragetyp:;"n aus m"',
+                      paste0("Fragetext:;", zitat(paste0("'", nr, " ", frage, "' : ", option))),
+                      'Werte:;"0 : nicht angekreuzt"', paste0('" ";"""', k, '"": angekreuzt"'), trenner)
+      }
+    } else if (typ %in% c("sc", "sk")) {
+      antworten <- attr(x, "labels")
+      codebuch <- c(codebuch, abschnitt,
+                    if (typ == "sc") 'Fragetyp:;"1 aus n"' else "Fragetyp:;Skalafrage",
+                    paste0("Fragetext:;", zitat(paste(nr, attr(x, "label")))),
+                    paste0(if (typ == "sc") "Wert:" else "Werte:", ';"<leer>: Ungültig / Keine Antwort"'),
+                    paste0('" ";', zitat(paste0(antworten, " : ", names(antworten)))), trenner)
+    } else {
+      codebuch <- c(codebuch, abschnitt, "Zeichenlimit:;1500", 'Fragetyp:;"Offene Frage"',
+                    paste0("Fragetext:;", zitat(paste(nr, attr(x, "label")))),
+                    'Wert:;"Antworttext / Platzhalter"', trenner)
+    }
+  }
+
+  writeLines(iconv(rohdaten, "UTF-8", "latin1"), rohdaten_datei, useBytes = TRUE)
+  writeLines(iconv(codebuch, "UTF-8", "latin1"), codebuch_datei, useBytes = TRUE)
+}
+
+
 # Speichern ---------------------------------------------------------------
 
 saveRDS(lve, "lve.rds")
 write.csv2(lve_info, "lve_info.csv", row.names = FALSE, fileEncoding = "UTF-8")
-saveRDS(kohorte, "kohorte.rds")
+evasys_export(kohorte, "evasys_rohdaten.csv", "evasys_codebuch.csv", filter = "zugang_note")
 writexl::write_xlsx(berichte, "kohorte_berichte.xlsx")
 writexl::write_xlsx(regeln, "kohorte_regeln.xlsx")

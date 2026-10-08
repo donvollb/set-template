@@ -18,7 +18,8 @@ contributes:
         x: 2cm
         top: 3cm
         bottom: 2cm
-      mainfont: "Red Hat Text" # muss installiert sein, siehe README
+      mainfont: "Red Hat Text"
+      font-paths: fonts # Schrift wird mitgeliefert (SIL Open Font License, siehe fonts/OFL.txt)
       fontsize: 10pt
       lang: de
 

@@ -25,6 +25,9 @@ and the texts in the `.qmd` files.
   decides which questions appear in which report
 - **Long tables break across pages** (with repeated header); headings move to the next page together with their content
 - **Open-ended answers in an appendix** with links back and forth
+- **Complete workflow as an example:** read an evasys export, define the reports, render, log and
+  distribute all reports
+- **Font included** (Red Hat Text), no installation needed
 
 ## Requirements
 
@@ -36,10 +39,11 @@ and the texts in the `.qmd` files.
   pak::pak("donvollb/setanalysis@dev")
   ```
 
-- Font **Red Hat Text** ([Google Fonts](https://fonts.google.com/specimen/Red+Hat+Text)).
-  setanalysis ships the font for its plots; for the PDF text it has to be installed.
-  Install the files from the *static* subfolder. On Windows you may need to choose
-  *Install for all users* (select all *.ttf* files → right-click) so that Typst finds them.
+- For the scripts of the cohort example additionally the R packages quarto (rendering) and writexl
+  (only to regenerate the example data).
+
+The font **Red Hat Text** ships with the extension (`_extensions/set-template/fonts/`); for the plots,
+setanalysis registers it when loaded. It does not need to be installed.
 
 ## Installation
 
@@ -64,16 +68,22 @@ quarto render template.qmd -P i:3    # report 3
 quarto render                        # all examples
 ```
 
-Create all reports of a survey in one go (additionally requires the R package quarto):
+Create all reports of a survey in two steps:
 
 ```bash
-Rscript beispiele/alle-berichte-rendern.R
+Rscript beispiele/vorbereitung.R           # 1. prepare data and report table
+Rscript beispiele/alle-berichte-rendern.R  # 2. render, log and distribute all reports
 ```
 
-The script renders `beispiele/kohorte.qmd` for every row of the report table, continues with the next
-report on errors, discards reports with fewer than 10 responses, writes a log
-(`berichte/protokoll.csv`: report, responses, status) and copies the PDFs into the folders given in the
-report table's `Ordner` column.
+1. `vorbereitung.R` reads the evasys export (raw data and codebook) with `evasys_read_data()`, evaluates
+   the report and rule tables with `input_tabelle()`, adds titles and file names, checks spellings with
+   `label_test()` and saves everything to `daten/`.
+2. `alle-berichte-rendern.R` renders `beispiele/kohorte.qmd` for every row of the report table, continues
+   with the next report on errors, discards reports with fewer than 10 responses, writes a log
+   (`berichte/protokoll.csv`: report, responses, status) and copies the PDFs into the folders given in the
+   report table's `Ordner` column.
+
+The results of step 1 are included, so the examples can also be rendered directly.
 
 Rendered examples: [course evaluation](vorschau/lve-bericht.pdf) ·
 [cohort survey: master report](vorschau/kohorte-master.pdf) ·
@@ -87,13 +97,19 @@ Rendered examples: [course evaluation](vorschau/lve-bericht.pdf) ·
 │   ├── typst-template.typ      layout: header, footer, title, tables, headings
 │   ├── typst-show.typ          passes the YAML header to the layout
 │   ├── chunk-ausgabe.lua       allows page breaks inside R chunks
+│   ├── fonts/                  Red Hat Text with licence (SIL Open Font License)
 │   └── images/                 logos
 ├── template.qmd                example 1: course evaluation report per department
 ├── beispiele/
-│   ├── kohorte.qmd             example 2: many reports via a report table and a rule table
-│   └── alle-berichte-rendern.R renders, logs and distributes all reports of example 2
-├── daten/                      fictitious example data, report table and rule table
-│   └── beispieldaten_erzeugen.R  generates the data (random, reproducible)
+│   ├── vorbereitung.R          example 2, step 1: read evasys export, define reports
+│   ├── alle-berichte-rendern.R example 2, step 2: render, log and distribute all reports
+│   └── kohorte.qmd             example 2: report whose content depends on the report table row
+├── daten/                      fictitious example data
+│   ├── beispieldaten_erzeugen.R  generates the data (random, reproducible)
+│   ├── lve.rds, lve_info.csv     example 1: data and info table
+│   ├── evasys_*.csv              example 2: export in evasys format (raw data, codebook)
+│   ├── kohorte_*.xlsx            example 2: report table and rule table
+│   └── kohorte*.rds              example 2: output of vorbereitung.R
 └── vorschau/                   rendered example PDFs and preview images
 ```
 
@@ -110,18 +126,20 @@ For surveys where each report (e.g. per degree programme) contains different que
 1. The **report table** has one row per report (code, degree, programme, title …).
 2. The **rule table** defines for each question when it is shown, e.g. `inkl.1.3` →
    `Abschluss == "Bachelor of Science (B.Sc.)"`.
-3. `input_tabelle()` computes `TRUE`/`FALSE` per report and question. The template sets these
-   values as variables; `merge_sc(…, nr = "1.3")` then checks `inkl.1.3`, and whole sections are
-   shown or hidden with `eval: !expr header1`.
+3. `input_tabelle()` computes `TRUE`/`FALSE` per report and question (in `vorbereitung.R`). The report
+   sets these values as variables; `merge_sc(…, nr = "1.3")` then checks `inkl.1.3`, and whole sections
+   are shown or hidden with `eval: !expr header1`.
 
 Both tables are included as `daten/kohorte_berichte.xlsx` and `daten/kohorte_regeln.xlsx`.
 
 ### Example data
 
 All data in `daten/` are randomly generated; departments and degree programmes are made up and
-open-ended answers are Lorem ipsum. The variables carry the same attributes as data read with
-`evasys_read_data()` (question text, number, type, answer codes). Regenerate them with
-`Rscript beispieldaten_erzeugen.R` inside `daten/` (additionally requires the writexl package).
+open-ended answers are Lorem ipsum. The cohort example comes as an export in evasys format (raw data
+and codebook, including typical placeholders such as `[Freitextfeld]`), the course evaluation example
+directly as an R file with the attributes `evasys_read_data()` creates (question text, number, type,
+answer codes). Regenerate the data with `Rscript beispieldaten_erzeugen.R` inside `daten/`, then run
+`beispiele/vorbereitung.R`.
 
 ![Preview of the cohort example](vorschau/kohorte.png)
 
@@ -164,5 +182,7 @@ RPTU colours for `accent_col`:
 ## License
 
 **Code:** [MIT License](LICENSE)
+
+**Font:** Red Hat Text, © The Red Hat Project Authors, [SIL Open Font License 1.1](_extensions/set-template/fonts/OFL.txt)
 
 **Logos:** property of [RPTU (University of Kaiserslautern-Landau)](https://rptu.de)

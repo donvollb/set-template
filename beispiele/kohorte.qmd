@@ -57,10 +57,9 @@ seitenumbruch <- function() cat("\n\n```{=typst}\n#pagebreak(weak: true)\n```\n\
 
 # Welche Fragen kommen in diesen Bericht? ---------------------------------
 
-# Berichtstabelle: eine Zeile pro Bericht (Merkmale wie Abschluss, Studiengang, Titel)
-# Regeltabelle: eine Zeile pro Frage, z. B. inkl.1.3 = Abschluss == "Bachelor of Science (B.Sc.)"
-# input_tabelle() berechnet daraus für jeden Bericht TRUE/FALSE je Frage und Abschnitt.
-berichte <- input_tabelle("../daten/kohorte_berichte.xlsx", "../daten/kohorte_regeln.xlsx")
+# Berichtstabelle aus vorbereitung.R: eine Zeile pro Bericht mit Merkmalen (Abschluss, Studiengang,
+# Titel …) und TRUE/FALSE je Frage und Abschnitt, berechnet von input_tabelle() aus der Regeltabelle
+berichte <- readRDS("../daten/kohorte_berichte.rds")
 bericht <- berichte[params$i, ]
 
 # inkl.1.1, inkl.1.2, …, header1, … als Variablen setzen;
@@ -71,7 +70,7 @@ list2env(as.list(bericht[schalter]), envir = environment())
 
 # Daten -------------------------------------------------------------------
 
-# Zufällig erzeugte Beispieldaten (siehe daten/beispieldaten_erzeugen.R)
+# Aufbereitete Daten aus vorbereitung.R (fiktiver evasys-Export, siehe daten/beispieldaten_erzeugen.R)
 daten <- readRDS("../daten/kohorte.rds")
 
 # Nur Antworten mit Abschluss und Studiengang des Berichts ("alle" = keine Einschränkung)
