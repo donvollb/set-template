@@ -1,7 +1,7 @@
-# set-template 2.0.0 (in Entwicklung)
+# set-template 2.0.0
 
 Grundlegende Überarbeitung: Die Vorlage nutzt jetzt Typst statt LaTeX und die aktuelle API von
-[setanalysis](https://github.com/donvollb/setanalysis) (≥ 1.1.0).
+[setanalysis](https://donvollb.github.io/setanalysis/) (≥ 1.1.0).
 
 ## Wichtige Änderungen
 

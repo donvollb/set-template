@@ -9,9 +9,11 @@
 
 Quarto template for personalised evaluation reports as PDF, e.g. from course evaluations or
 student and graduate surveys. The analysis is done by the R package
-[setanalysis](https://github.com/donvollb/setanalysis): one line of code per question produces a
+[setanalysis](https://donvollb.github.io/setanalysis/): one line of code per question produces a
 heading, a table and a plot. This template provides the layout (Typst) and two working example
-reports based on randomly generated example data.
+reports based on randomly generated example data. A step-by-step guide to the workflow is the
+vignette [Einen Evaluationsbericht erstellen](https://donvollb.github.io/setanalysis/articles/bericht-erstellen.html)
+(in German).
 
 The reports themselves are in German; the template can be adapted to other languages via `lang`
 and the texts in the `.qmd` files.
@@ -33,11 +35,11 @@ and the texts in the `.qmd` files.
 ## Requirements
 
 - [Quarto](https://quarto.org) ≥ 1.7 (includes Typst)
-- [R](https://www.r-project.org) with the package **setanalysis** (currently the development version):
+- [R](https://www.r-project.org) with the package [setanalysis](https://donvollb.github.io/setanalysis/) ≥ 1.1.0:
 
   ```r
   # install.packages("pak")
-  pak::pak("donvollb/setanalysis@dev")
+  pak::pak("donvollb/setanalysis")
   ```
 
 - For the scripts of the cohort example additionally the R packages quarto (rendering) and writexl
@@ -174,7 +176,8 @@ RPTU colours for `accent_col`:
 ### Building blocks
 
 - setanalysis functions in R chunks, e.g. `merge_sc()`, `merge_mc()`, `merge_sk()`,
-  `merge_aggr_sk()`, `merge_open()`; overview with `?setanalysis`.
+  `merge_aggr_sk()`, `merge_open()`; overview with `?setanalysis` or in the
+  [function reference](https://donvollb.github.io/setanalysis/reference/).
 - `appendix_open()` belongs at the end of every report (prints the collected open-ended answers).
 - Page break: `{{< pagebreak >}}` in text or inside a chunk.
 - Typst helpers of the template: `#begriff[…]` (term highlighted in the accent colour),

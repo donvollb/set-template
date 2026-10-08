@@ -9,9 +9,11 @@
 
 Quarto-Vorlage für personalisierte Evaluationsberichte als PDF, z. B. aus der
 Lehrveranstaltungsevaluation oder aus Befragungen von Studierenden und Absolvent\*innen.
-Die Auswertung übernimmt das R-Paket [setanalysis](https://github.com/donvollb/setanalysis):
+Die Auswertung übernimmt das R-Paket [setanalysis](https://donvollb.github.io/setanalysis/):
 Eine Zeile Code pro Frage erzeugt Überschrift, Tabelle und Abbildung. Diese Vorlage liefert
 das Layout (Typst) und zwei lauffähige Beispielberichte mit zufällig erzeugten Beispieldaten.
+Eine Schritt-für-Schritt-Anleitung zum Ablauf gibt die Vignette
+[Einen Evaluationsbericht erstellen](https://donvollb.github.io/setanalysis/articles/bericht-erstellen.html).
 
 ![Vorschau des LVE-Beispielberichts](vorschau/lve-bericht.png)
 
@@ -30,11 +32,11 @@ das Layout (Typst) und zwei lauffähige Beispielberichte mit zufällig erzeugten
 ## Voraussetzungen
 
 - [Quarto](https://quarto.org) ≥ 1.7 (enthält Typst)
-- [R](https://www.r-project.org) mit dem Paket **setanalysis** (derzeit Entwicklungsstand):
+- [R](https://www.r-project.org) mit dem Paket [setanalysis](https://donvollb.github.io/setanalysis/) ≥ 1.1.0:
 
   ```r
   # install.packages("pak")
-  pak::pak("donvollb/setanalysis@dev")
+  pak::pak("donvollb/setanalysis")
   ```
 
 - Für die Skripte zum Kohorten-Beispiel zusätzlich die R-Pakete quarto (Rendern) und writexl
@@ -171,7 +173,8 @@ RPTU-Farben für `accent_col`:
 ### Bausteine im Bericht
 
 - Auswertungsfunktionen aus setanalysis in R-Chunks, z. B. `merge_sc()`, `merge_mc()`, `merge_sk()`,
-  `merge_aggr_sk()`, `merge_open()`; Überblick mit `?setanalysis`.
+  `merge_aggr_sk()`, `merge_open()`; Überblick mit `?setanalysis` oder in der
+  [Funktionsreferenz](https://donvollb.github.io/setanalysis/reference/).
 - `appendix_open()` gehört ans Ende jedes Berichts (gibt die gesammelten offenen Antworten aus).
 - Seitenumbruch: `{{< pagebreak >}}` im Text oder in einem Chunk.
 - Typst-Hilfsfunktionen der Vorlage: `#begriff[…]` (hervorgehobener Begriff in der Akzentfarbe),

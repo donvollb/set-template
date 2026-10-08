@@ -28,12 +28,10 @@ jobs:
         with:
           use-public-rspm: true
 
-      # Nach dem Release von setanalysis 1.1.0: github::donvollb/setanalysis@dev -> any::setanalysis
-      # bzw. github::donvollb/setanalysis
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           packages: |
-            github::donvollb/setanalysis@dev
+            github::donvollb/setanalysis
             any::rmarkdown
             any::quarto
             any::pdftools
