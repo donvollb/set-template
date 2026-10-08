@@ -2,3 +2,5 @@ figure/
 template_files/
 template.tex
 template.log
+# Interne Notizen und Arbeitsdateien (nicht veröffentlichen)
+notes/
