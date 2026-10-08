@@ -32,6 +32,7 @@ Grundlegende Überarbeitung: Die Vorlage nutzt jetzt Typst statt LaTeX und die a
 - Eigene, zufällig erzeugte Beispieldaten in `daten/` (mit Skript zum Erzeugen), für das Kohorten-Beispiel
   als Export im Format von evasys.
 - Untertitel pro Bericht aus den Daten.
+- GitHub Action, die beide Beispiele und die Skripte bei jedem Push ausführt (Badge in der README).
 - Zweisprachige README (deutsch/englisch) mit Vorschaubildern und Beispiel-PDFs in `vorschau/`.
 
 ## Behoben

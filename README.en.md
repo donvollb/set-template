@@ -5,6 +5,7 @@
 ![Quarto Extension](https://img.shields.io/badge/quarto-extension-blue)
 ![Format: Typst](https://img.shields.io/badge/format-typst-239dad)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
+[![Examples](https://github.com/donvollb/set-template/actions/workflows/beispiele.yaml/badge.svg)](https://github.com/donvollb/set-template/actions/workflows/beispiele.yaml)
 
 Quarto template for personalised evaluation reports as PDF, e.g. from course evaluations or
 student and graduate surveys. The analysis is done by the R package

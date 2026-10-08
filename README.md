@@ -5,6 +5,7 @@
 ![Quarto Extension](https://img.shields.io/badge/quarto-extension-blue)
 ![Format: Typst](https://img.shields.io/badge/format-typst-239dad)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
+[![Beispiele](https://github.com/donvollb/set-template/actions/workflows/beispiele.yaml/badge.svg)](https://github.com/donvollb/set-template/actions/workflows/beispiele.yaml)
 
 Quarto-Vorlage für personalisierte Evaluationsberichte als PDF, z. B. aus der
 Lehrveranstaltungsevaluation oder aus Befragungen von Studierenden und Absolvent\*innen.

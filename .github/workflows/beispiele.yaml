@@ -1,0 +1,59 @@
+# Rendert beide Beispiele und führt die Skripte des Kohorten-Beispiels aus.
+# Schlägt fehl, sobald ein Bericht nicht erstellt werden kann.
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+  workflow_dispatch:
+
+name: beispiele.yaml
+
+permissions: read-all
+
+jobs:
+  beispiele:
+    runs-on: ubuntu-latest
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: quarto-dev/quarto-actions/setup@v2
+        with:
+          version: 1.7.30
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      # Nach dem Release von setanalysis 1.1.0: github::donvollb/setanalysis@dev -> any::setanalysis
+      # bzw. github::donvollb/setanalysis
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            github::donvollb/setanalysis@dev
+            any::rmarkdown
+            any::quarto
+
+      - name: LVE-Beispiel (alle vier Berichte)
+        run: |
+          for i in 1 2 3 4; do
+            quarto render template.qmd -P i:$i -o lve_$i.pdf
+          done
+
+      - name: Kohorten-Beispiel vorbereiten
+        run: Rscript beispiele/vorbereitung.R
+
+      - name: Kohorten-Beispiel (alle Berichte)
+        run: |
+          Rscript beispiele/alle-berichte-rendern.R
+          Rscript -e 'p <- read.csv2("berichte/protokoll.csv"); print(p[, c("Code", "N", "Status")]); stopifnot(all(p$Status == "erstellt"))'
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: berichte
+          path: |
+            lve_*.pdf
+            berichte/
