@@ -4,10 +4,14 @@
 // Platzhalter wie $$accent_col$$ füllt Quarto aus dem YAML-Kopf des Dokuments bzw. aus _extension.yml.
 
 
-// Akzentfarbe ------------------------------------------------------------------
+// Angaben aus dem YAML-Kopf ----------------------------------------------------
 
-// Quarto maskiert "#" als "\#", daher den Backslash entfernen
-#let akzent = rgb("$accent_col$".replace("\\", ""))
+// Pandoc maskiert Sonderzeichen in Texten aus dem YAML-Kopf mit "\" (z. B. "\#507289",
+// "\_extensions/…"). Für Farben und Dateipfade wird die Maskierung wieder entfernt;
+// unter Linux wäre der Backslash sonst Teil des Dateinamens.
+#let ohne-maskierung(text) = text.replace(regex("\\\\(.)"), m => m.captures.first())
+
+#let akzent = rgb(ohne-maskierung("$accent_col$"))
 
 // Farbe im Logo, die durch die Akzentfarbe ersetzt wird
 #let logo-farbe = "#006a6a"
@@ -42,7 +46,7 @@
 ) = {
   // Logo einlesen und in der Akzentfarbe einfärben
   let kopf-logo = if logo != none {
-    image(bytes(read(logo).replace(logo-farbe, akzent.to-hex())), height: 1.3cm)
+    image(bytes(read(ohne-maskierung(logo)).replace(logo-farbe, akzent.to-hex())), height: 1.3cm)
   }
 
   set page(
