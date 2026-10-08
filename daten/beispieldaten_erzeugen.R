@@ -191,7 +191,7 @@ berichte <- data.frame(
   Art         = c("alles.master", "alles", "Studiengang", "Studiengang", "Studiengang", "speziell"),
   Abschluss   = c("alle", "alle", abschluesse[c(2, 4, 1)], "alle"),
   Studiengang = c("alle", "alle", "Musterwissenschaft", "Musterwissenschaft", "Beispielkunde", "alle"),
-  Titel       = paste("Befragung 2025:", c("Master", "Gesamtbericht", "B.Sc. Musterwissenschaft",
+  Titel       = paste("Befragung 2025:", c("Master-Bericht (alle Fragen)", "Gesamtbericht", "B.Sc. Musterwissenschaft",
                                            "M.Sc. Musterwissenschaft", "B.A. Beispielkunde", "Sonderauswertung")),
   # Wohin alle-berichte-rendern.R den Bericht kopiert (mehrere mit " | ", leer = nicht verteilen)
   Ordner      = c("", "Gesamtberichte | Musterwissenschaft | Beispielkunde", "Musterwissenschaft",
