@@ -21,6 +21,9 @@ Grundlegende Überarbeitung: Die Vorlage nutzt jetzt Typst statt LaTeX und die a
 - Typst-Hilfsfunktionen `#begriff[…]` und `#hinweis[…]` für Legenden und Hinweistexte.
 - Zweites Beispiel `beispiele/kohorte.qmd`: mehrere Berichte mit unterschiedlichem Inhalt über Berichts- und
   Regeltabelle (`input_tabelle()`), offene Antworten im Anhang.
+- Skript `beispiele/alle-berichte-rendern.R`: erstellt alle Berichte einer Befragung nacheinander, macht bei
+  Fehlern weiter, verwirft Berichte mit zu wenigen Stimmen, schreibt ein Protokoll und verteilt die PDFs in
+  Ordner (Spalte `Ordner` der Berichtstabelle).
 - Eigene, zufällig erzeugte Beispieldaten in `daten/` (mit Skript zum Erzeugen).
 - Untertitel pro Bericht aus den Daten.
 - Zweisprachige README (deutsch/englisch) mit Vorschaubildern und Beispiel-PDFs in `vorschau/`.

@@ -64,6 +64,17 @@ quarto render template.qmd -P i:3    # report 3
 quarto render                        # all examples
 ```
 
+Create all reports of a survey in one go (additionally requires the R package quarto):
+
+```bash
+Rscript beispiele/alle-berichte-rendern.R
+```
+
+The script renders `beispiele/kohorte.qmd` for every row of the report table, continues with the next
+report on errors, discards reports with fewer than 10 responses, writes a log
+(`berichte/protokoll.csv`: report, responses, status) and copies the PDFs into the folders given in the
+report table's `Ordner` column.
+
 Rendered examples: [course evaluation](vorschau/lve-bericht.pdf) ·
 [cohort survey: master report](vorschau/kohorte-master.pdf) ·
 [cohort survey: report "Sonderauswertung"](vorschau/kohorte-sonderauswertung.pdf)
@@ -78,7 +89,9 @@ Rendered examples: [course evaluation](vorschau/lve-bericht.pdf) ·
 │   ├── chunk-ausgabe.lua       allows page breaks inside R chunks
 │   └── images/                 logos
 ├── template.qmd                example 1: course evaluation report per department
-├── beispiele/kohorte.qmd       example 2: many reports via a report table and a rule table
+├── beispiele/
+│   ├── kohorte.qmd             example 2: many reports via a report table and a rule table
+│   └── alle-berichte-rendern.R renders, logs and distributes all reports of example 2
 ├── daten/                      fictitious example data, report table and rule table
 │   └── beispieldaten_erzeugen.R  generates the data (random, reproducible)
 └── vorschau/                   rendered example PDFs and preview images
@@ -147,10 +160,6 @@ RPTU colours for `accent_col`:
 - Page break: `{{< pagebreak >}}` in text or inside a chunk.
 - Typst helpers of the template: `#begriff[…]` (term highlighted in the accent colour),
   `#hinweis[…]` (small note), each inside a ```` ```{=typst} ```` block.
-
-## Planned
-
-- Example script that renders and logs all reports of a survey in one go
 
 ## License
 

@@ -61,6 +61,17 @@ quarto render template.qmd -P i:3    # Bericht 3
 quarto render                        # alle Beispiele
 ```
 
+Alle Berichte einer Befragung auf einmal erstellen (benötigt zusätzlich das R-Paket quarto):
+
+```bash
+Rscript beispiele/alle-berichte-rendern.R
+```
+
+Das Skript rendert `beispiele/kohorte.qmd` für jede Zeile der Berichtstabelle, macht bei Fehlern mit dem
+nächsten Bericht weiter, verwirft Berichte mit weniger als 10 Stimmen, schreibt ein Protokoll
+(`berichte/protokoll.csv`: Bericht, Stimmen, Status) und kopiert die PDFs in die Ordner aus der Spalte
+`Ordner` der Berichtstabelle.
+
 Gerenderte Beispiele: [LVE-Bericht](vorschau/lve-bericht.pdf) ·
 [Kohorte: Master-Bericht](vorschau/kohorte-master.pdf) ·
 [Kohorte: Bericht „Sonderauswertung“](vorschau/kohorte-sonderauswertung.pdf)
@@ -75,7 +86,9 @@ Gerenderte Beispiele: [LVE-Bericht](vorschau/lve-bericht.pdf) ·
 │   ├── chunk-ausgabe.lua       erlaubt Seitenumbrüche in R-Chunks
 │   └── images/                 Logos
 ├── template.qmd                Beispiel 1: LVE-Bericht pro Fachbereich
-├── beispiele/kohorte.qmd       Beispiel 2: mehrere Berichte über Berichts- und Regeltabelle
+├── beispiele/
+│   ├── kohorte.qmd             Beispiel 2: mehrere Berichte über Berichts- und Regeltabelle
+│   └── alle-berichte-rendern.R erstellt, protokolliert und verteilt alle Berichte von Beispiel 2
 ├── daten/                      fiktive Beispieldaten, Berichts- und Regeltabelle
 │   └── beispieldaten_erzeugen.R  erzeugt die Daten (zufällig, reproduzierbar)
 └── vorschau/                   gerenderte Beispiel-PDFs und Vorschaubilder
@@ -144,10 +157,6 @@ RPTU-Farben für `accent_col`:
 - Seitenumbruch: `{{< pagebreak >}}` im Text oder in einem Chunk.
 - Typst-Hilfsfunktionen der Vorlage: `#begriff[…]` (hervorgehobener Begriff in der Akzentfarbe),
   `#hinweis[…]` (kleiner Hinweistext), jeweils in einem ```` ```{=typst} ````-Block.
-
-## Geplant
-
-- Beispielskript, das alle Berichte einer Befragung nacheinander rendert und protokolliert
 
 ## Lizenz
 

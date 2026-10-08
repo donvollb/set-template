@@ -10,6 +10,7 @@ notes/
 *.typ
 !_extensions/**/*.typ
 *_files/
+/berichte/
 
 # R
 .Rhistory

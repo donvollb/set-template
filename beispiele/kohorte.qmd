@@ -8,6 +8,7 @@ accent_col: "#6ab2e7" # RPTU hellblau
 
 params:
   i: 1 # Zeile der Berichtstabelle (1 = Master-Bericht mit allen Fragen, 2 bis 6 = einzelne Berichte)
+  protokoll: "" # Pfad zur Protokolldatei; setzt alle-berichte-rendern.R, leer = kein Protokoll
 ---
 
 ```{r}
@@ -20,7 +21,7 @@ library(setanalysis)
 
 # Beim Rendern kommen params und Akzentfarbe aus dem YAML-Kopf.
 # Wird der Code direkt ausgeführt (z. B. in RStudio), gelten diese Ersatzwerte:
-if (!exists("params")) params <- list(i = 1)
+if (!exists("params")) params <- list(i = 1, protokoll = "")
 akzentfarbe <- rmarkdown::metadata$accent_col
 if (is.null(akzentfarbe)) akzentfarbe <- setanalysis_defaults$color.bars
 
@@ -79,6 +80,13 @@ if (bericht$Abschluss != "alle") {
 }
 if (bericht$Studiengang != "alle") {
   daten <- zeilen_waehlen(daten, antworttext(daten$studiengang) %in% bericht$Studiengang)
+}
+
+# Anzahl der Stimmen ins Protokoll schreiben (nur beim Rendern über alle-berichte-rendern.R)
+if (nzchar(params$protokoll)) {
+  neu <- !file.exists(params$protokoll)
+  write.table(data.frame(Code = bericht$Code, N = nrow(daten)), params$protokoll,
+              sep = ";", row.names = FALSE, col.names = neu, append = !neu)
 }
 
 # Bei weniger als 10 Stimmen keinen Bericht erstellen
